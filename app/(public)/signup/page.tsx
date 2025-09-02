@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/app/contexts/AuthContext'
 
@@ -14,7 +13,6 @@ export default function SignUpPage() {
   const [message, setMessage] = useState('')
   
   const { signUp, signInWithGoogle } = useAuth()
-  const router = useRouter()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()

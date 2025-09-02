@@ -34,7 +34,7 @@ export default function Home() {
             </span>
           </h2>
           <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Mutual visibility - you can't search what you don't share
+            Mutual visibility - you can&apos;t search what you don&apos;t share
           </p>
         </div>
 

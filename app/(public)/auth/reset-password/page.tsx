@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -19,6 +19,7 @@ export default function ResetPasswordPage() {
     const refreshToken = hashParams.get('refresh_token')
 
     if (accessToken && refreshToken) {
+      const supabase = createClient()
       supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
@@ -44,7 +45,7 @@ export default function ResetPasswordPage() {
       return
     }
 
-    const { error } = await supabase.auth.updateUser({
+    const { error } = await createClient().auth.updateUser({
       password: password
     })
 

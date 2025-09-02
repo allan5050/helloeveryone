@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User, Session, AuthError } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 
 interface AuthContextType {
   user: User | null
@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const supabase = createClient()
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
@@ -43,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { error } = await createClient().auth.signUp({
       email,
       password,
       options: {
@@ -54,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await createClient().auth.signInWithPassword({
       email,
       password,
     })
@@ -62,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await createClient().auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`
@@ -72,12 +73,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
+    const { error } = await createClient().auth.signOut()
     return { error }
   }
 
   const resetPassword = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await createClient().auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`
     })
     return { error }

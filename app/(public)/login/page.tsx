@@ -67,7 +67,7 @@ export default function LoginPage() {
               Check your email
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              We've sent a password reset link to {email}
+              We&apos;ve sent a password reset link to {email}
             </p>
           </div>
           <div>
