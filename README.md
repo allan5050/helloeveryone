@@ -2,6 +2,8 @@
 
 > **Smart social matching for meaningful connections** - Helping busy adults (25-50) find real friends through intelligent matching at local events.
 
+🌐 **Live at**: [https://helloeveryone.vercel.app](https://helloeveryone.vercel.app)
+
 ## 🎯 Problem We Solve
 
 Adults waste precious time at social events talking to random people with whom they have nothing in common. We solve this by showing you **exactly who to meet** based on compatibility scores.
@@ -23,7 +25,7 @@ node >= 18.0.0
 npm >= 9.0.0
 
 # Clone and install
-git clone https://github.com/yourusername/helloeveryone.git
+git clone https://github.com/allan5050/helloeveryone.git
 cd helloeveryone
 npm install
 
@@ -48,8 +50,13 @@ npm run test:e2e    # End-to-end tests
 ```
 helloeveryone/
 ├── app/                    # Next.js 14 App Router
+│   ├── (public)/          # Public routes (login, signup)
+│   ├── (dashboard)/       # Protected routes
+│   ├── auth/callback/     # OAuth callback handler
+│   └── contexts/          # AuthContext provider
 ├── components/            # React components
 ├── lib/                   # Core business logic
+│   └── api/auth.ts        # Server auth helpers
 ├── hooks/                 # Custom React hooks  
 ├── types/                 # TypeScript definitions
 ├── public/               # Static assets + PWA manifest
@@ -64,9 +71,9 @@ helloeveryone/
 - **Frontend**: Next.js 14, TypeScript, Tailwind CSS
 - **Database**: Supabase (PostgreSQL + pgvector)
 - **Matching**: Semantic search with OpenAI embeddings
-- **Auth**: Supabase Auth
+- **Auth**: Supabase Auth (email/password + Google OAuth)
 - **Calendar**: ics.js for universal compatibility
-- **Hosting**: Vercel Edge Network
+- **Hosting**: Vercel Edge Network (auto-deploy from GitHub)
 
 ## 📊 Matching Algorithm
 
@@ -104,7 +111,8 @@ npm run test:load        # K6 load testing
 ## 📝 Documentation
 
 - [Implementation Plan](./IMPLEMENTATION_PLAN.md) - Technical architecture
-- [API Documentation](./docs/API.md) - Endpoint reference
+- [Deployment Guide](./DEPLOYMENT.md) - Vercel & Supabase setup
+- [API Documentation](./docs/API_ROUTES.md) - Endpoint reference
 - [Database Schema](./docs/DATABASE.md) - Table structures
 - [Matching Algorithm](./docs/MATCHING.md) - How matching works
 - [Component Guide](./docs/COMPONENTS.md) - UI component patterns

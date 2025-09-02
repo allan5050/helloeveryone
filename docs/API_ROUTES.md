@@ -6,36 +6,83 @@ All API routes run server-side in Next.js and are hidden from users. Sensitive l
 ## Route Structure
 
 ```
-app/api/
-├── auth/           # Supabase auth webhooks
-├── match/          # Matching engine endpoints
-├── events/         # Event management
-├── profile/        # Profile operations
-├── calendar/       # ICS file generation
-├── chat/           # Messaging endpoints
-└── admin/          # Admin operations
+app/
+├── api/
+│   ├── match/          # Matching engine endpoints
+│   ├── events/         # Event management
+│   ├── profile/        # Profile operations
+│   ├── calendar/       # ICS file generation
+│   ├── chat/           # Messaging endpoints
+│   └── admin/          # Admin operations
+├── auth/
+│   └── callback/       # OAuth callback handler (route.ts)
+├── (public)/
+│   ├── login/          # Login page (page.tsx)
+│   ├── signup/         # Signup page (page.tsx)
+│   └── auth/
+│       └── reset-password/  # Password reset (page.tsx)
 ```
 
 ## Authentication Pattern
 
-All routes should verify authentication:
+All routes should verify authentication using the server-side auth helpers:
 
 ```typescript
-// lib/api/auth.ts - Reusable auth check
-import { createClient } from '@/lib/supabase/server'
+// lib/api/auth.ts - Server-side auth helpers
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import type { User } from '@supabase/supabase-js'
 
-export async function requireAuth() {
-  const supabase = createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
+// For page components - redirects to login if not authenticated
+export async function requireAuth(): Promise<User> {
+  const supabase = await createSupabaseServerClient()
+  const { data: { session }, error } = await supabase.auth.getSession()
   
-  if (error || !user) {
-    return Response.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    )
+  if (error || !session?.user) {
+    redirect('/login')
   }
   
-  return user
+  return session.user
+}
+
+// For API routes - throws error if not authenticated
+export async function requireAuthAPI(): Promise<User> {
+  const supabase = await createSupabaseServerClient()
+  const { data: { session }, error } = await supabase.auth.getSession()
+  
+  if (error || !session?.user) {
+    throw new Error('Unauthorized')
+  }
+  
+  return session.user
+}
+
+// For optional auth - returns user or null
+export async function getCurrentUser(): Promise<User | null> {
+  const supabase = await createSupabaseServerClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  return session?.user ?? null
+}
+```
+
+### Client-side Authentication
+
+For client components, use the AuthContext:
+
+```typescript
+// app/contexts/AuthContext.tsx - Client-side auth state
+import { useAuth } from '@/app/contexts/AuthContext'
+
+export default function MyComponent() {
+  const { user, signIn, signOut, signUp, resetPassword } = useAuth()
+  
+  if (!user) {
+    return <div>Please login</div>
+  }
+  
+  return <div>Welcome {user.email}</div>
 }
 ```
 
@@ -47,8 +94,7 @@ Calculate matches for a user (expensive operation, cached)
 ```typescript
 // app/api/match/calculate/route.ts
 export async function POST(request: Request) {
-  const user = await requireAuth()
-  if (!user) return unauthorized()
+  const user = await requireAuthAPI()  // Uses API auth helper
   
   // Parse request
   const { limit = 10, forceRefresh = false } = await request.json()
@@ -81,7 +127,7 @@ export async function GET(
   request: Request,
   { params }: { params: { eventId: string } }
 ) {
-  const user = await requireAuth()
+  const user = await requireAuthAPI()
   
   // Call PostgreSQL function
   const { data: matches } = await supabase
@@ -108,7 +154,7 @@ Generate embeddings for user bio (OpenAI integration)
 ```typescript
 // app/api/match/generate-embeddings/route.ts
 export async function POST(request: Request) {
-  const user = await requireAuth()
+  const user = await requireAuthAPI()
   const { bio } = await request.json()
   
   // Validate bio
@@ -161,7 +207,7 @@ Get events with high match potential
 ```typescript
 // app/api/events/suggested/route.ts
 export async function GET(request: Request) {
-  const user = await requireAuth()
+  const user = await requireAuthAPI()
   
   // Complex query combining events and match scores
   const query = `
@@ -213,7 +259,7 @@ RSVP to an event with capacity check
 ```typescript
 // app/api/events/rsvp/route.ts
 export async function POST(request: Request) {
-  const user = await requireAuth()
+  const user = await requireAuthAPI()
   const { eventId, status } = await request.json()
   
   // Use database transaction for atomicity
@@ -256,7 +302,7 @@ export async function GET(
   request: Request,
   { params }: { params: { eventId: string } }
 ) {
-  const user = await requireAuth()
+  const user = await requireAuthAPI()
   
   // Get event details
   const { data: event } = await supabase
@@ -319,7 +365,7 @@ Update profile with privacy controls
 ```typescript
 // app/api/profile/update/route.ts
 export async function PUT(request: Request) {
-  const user = await requireAuth()
+  const user = await requireAuthAPI()
   const updates = await request.json()
   
   // Validate updates
@@ -353,7 +399,7 @@ Handle photo uploads to Supabase Storage
 ```typescript
 // app/api/profile/upload-photo/route.ts
 export async function POST(request: Request) {
-  const user = await requireAuth()
+  const user = await requireAuthAPI()
   const formData = await request.formData()
   const file = formData.get('photo') as File
   
@@ -399,7 +445,7 @@ Get user's conversations
 ```typescript
 // app/api/chat/conversations/route.ts
 export async function GET(request: Request) {
-  const user = await requireAuth()
+  const user = await requireAuthAPI()
   
   // Complex query to get conversations with last message
   const { data: conversations } = await supabase
@@ -425,7 +471,7 @@ Send a message with blocking check
 ```typescript
 // app/api/chat/send/route.ts
 export async function POST(request: Request) {
-  const user = await requireAuth()
+  const user = await requireAuthAPI()
   const { recipientId, content } = await request.json()
   
   // Check for blocks
@@ -474,7 +520,7 @@ Block a user
 ```typescript
 // app/api/privacy/block/route.ts
 export async function POST(request: Request) {
-  const user = await requireAuth()
+  const user = await requireAuthAPI()
   const { blockedUserId, reason } = await request.json()
   
   // Insert block record
@@ -505,7 +551,7 @@ GDPR data export
 ```typescript
 // app/api/privacy/export/route.ts
 export async function GET(request: Request) {
-  const user = await requireAuth()
+  const user = await requireAuthAPI()
   
   // Collect all user data
   const userData = await collectUserData(user.id)

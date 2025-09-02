@@ -5,6 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 HelloEveryone.fun is a smart social matching platform that helps busy adults (25-50) find meaningful connections through intelligent matching at local events. Built with Next.js 14, Supabase, and TypeScript.
 
+**Production URL**: https://helloeveryone.vercel.app  
+**GitHub**: allan5050/helloeveryone
+
 ## Key Development Commands
 
 ### Development
@@ -36,21 +39,25 @@ npm run db:seed      # Populate database with sample data
 - **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, PWA-enabled
 - **Database**: Supabase (PostgreSQL with pgvector for semantic matching)
 - **Matching Engine**: pgvector for semantic search with OpenAI embeddings
-- **Auth**: Supabase Auth with AuthContext provider
+- **Auth**: Supabase Auth with AuthContext provider (email/password + Google OAuth)
 - **State Management**: Zustand, React Query
 - **Forms**: React Hook Form with Zod validation
 - **Typography**: Inter font (Google Fonts)
+- **Deployment**: Vercel (automatic deployments from GitHub)
 
 ### Project Structure
 ```
 app/                 # Next.js App Router pages
-├── (auth)/         # Authentication pages
+├── (public)/       # Public pages (login, signup, reset-password)
 ├── (dashboard)/    # Protected pages (events, profile, matches, chat)
 ├── api/           # API routes for matching, calendar, webhooks
+├── auth/callback/ # OAuth callback handler
 ├── contexts/      # React contexts (AuthContext)
-components/         # React components organized by feature
+├── components/    # App-specific components (LogoutButton, ProtectedRoute)
+components/         # Shared React components organized by feature
 lib/               # Core business logic
 ├── supabase/      # Database client & queries
+├── api/auth.ts    # Server-side auth helpers (requireAuth, getCurrentUser)
 ├── matching/      # Matching algorithms
 ├── calendar/      # ICS generation
 hooks/             # Custom React hooks
@@ -127,3 +134,18 @@ The `.claude/agents/` directory contains specialized agent configurations:
 - Follow mutual visibility rules for all matching features
 - Prioritize mobile experience (PWA-first approach)
 - Use ICS files for calendar integration (no OAuth complexity)
+
+## Authentication Implementation
+- **Auth Provider**: `app/contexts/AuthContext.tsx` - Client-side auth state management
+- **Server Auth**: `lib/api/auth.ts` - Server-side auth helpers (requireAuth, getCurrentUser)
+- **Auth Routes**: `/login`, `/signup`, `/auth/reset-password`
+- **Protected Routes**: Use `ProtectedRoute` component or `requireAuth()` helper
+- **Session Management**: Automatic via Supabase Auth with cookie-based sessions
+- **OAuth**: Google OAuth ready (requires Google Client ID configuration)
+
+## Environment Variables
+Required in `.env.local` and Vercel:
+```
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
