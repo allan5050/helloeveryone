@@ -41,17 +41,17 @@ EOF
 
 **Terminal 1 - Database Setup:**
 ```bash
-claude "Review docs/DATABASE_SCHEMA.md and docs/ARCHITECTURE.md. Set up the complete Supabase database schema including: 1) Enable vector, uuid-ossp, pg_trgm extensions, 2) Create all tables from the schema (profiles, events, rsvps, match_scores, messages, favorites, blocks, meeting_slots), 3) Create all database functions especially calculate_match_score and get_event_matches, 4) Set up RLS policies for security, 5) Create indexes for performance. Test each table with sample data."
+claude --subagent db-architect "Read docs/DATABASE_SCHEMA.md carefully. Connect to Supabase and: 1) Enable vector, uuid-ossp, pg_trgm extensions, 2) Create ALL tables from the schema (profiles with vector column, events, rsvps, match_scores, messages, favorites, blocks, meeting_slots), 3) Create the calculate_match_score and get_event_matches functions, 4) Set up all RLS policies, 5) Create all indexes especially the ivfflat index for vector search. Test by inserting sample data into each table."
 ```
 
 **Terminal 2 - Project Structure:**
 ```bash
-claude "Review docs/ARCHITECTURE.md. Set up the Next.js project structure with: 1) App router folder structure for (public) and (protected) routes, 2) Create lib folder with supabase/client.ts and supabase/server.ts setup, 3) Set up middleware.ts for auth protection, 4) Create all API route folders under app/api/, 5) Install and configure shadcn/ui components, 6) Set up the layout.tsx with proper metadata."
+claude --subagent frontend-builder "Read docs/ARCHITECTURE.md. Initialize Next.js project structure: 1) Create app/(public) and app/(protected) route groups, 2) Set up lib/supabase/client.ts and server.ts using the environment variables, 3) Create middleware.ts for auth protection, 4) Create empty API route folders (api/match, api/events, api/profile, api/chat, api/calendar), 5) Install and configure shadcn/ui with 'npx shadcn-ui@latest init', 6) Update layout.tsx with proper metadata and font configuration."
 ```
 
 **Terminal 3 - Auth System:**
 ```bash
-claude "Review docs/ARCHITECTURE.md and docs/API_ROUTES.md. Implement complete authentication system: 1) Set up Supabase Auth with email/password and Google OAuth, 2) Create login and signup pages under app/(public)/, 3) Implement auth context provider, 4) Create protected route wrapper, 5) Add session management hooks, 6) Implement logout functionality, 7) Add password reset flow."
+claude --subagent api-engineer "Read docs/API_ROUTES.md. Build authentication: 1) Configure Supabase Auth for email/password and Google OAuth in Supabase dashboard, 2) Create app/(public)/login/page.tsx with email and Google login, 3) Create app/(public)/signup/page.tsx with email signup, 4) Build auth context provider using Supabase auth helpers, 5) Create lib/api/auth.ts with requireAuth() helper, 6) Add logout functionality, 7) Implement password reset flow with Supabase's resetPasswordForEmail."
 ```
 
 ---
@@ -62,17 +62,17 @@ claude "Review docs/ARCHITECTURE.md and docs/API_ROUTES.md. Implement complete a
 
 **Terminal 1 - Profile System:**
 ```bash
-claude "Review docs/ARCHITECTURE.md and docs/DATABASE_SCHEMA.md. Build the profile system: 1) Create profile setup flow with 3-step wizard (basic info, interests selection, bio), 2) Implement photo upload to Supabase Storage with compression, 3) Create profile edit page with privacy controls (visible_fields toggles), 4) Build the interests selector with categories (music, food, activities, etc), 5) Add the API route /api/profile/update with validation."
+claude --subagent frontend-builder "Build complete profile system: 1) Create app/(protected)/profile/setup/page.tsx with 3-step wizard (basic info with age, interests categories from docs/DATABASE_SCHEMA.md, bio text), 2) Implement photo upload component using Supabase Storage, 3) Build app/(protected)/profile/edit/page.tsx with privacy toggles for visible_fields, 4) Create reusable InterestSelector component with music/food/activities categories, 5) Add form validation with react-hook-form and zod."
 ```
 
 **Terminal 2 - Matching Engine Backend:**
 ```bash
-claude "Review docs/MATCHING_SYSTEM.md and docs/API_ROUTES.md. Implement the core matching engine: 1) Create /api/match/generate-embeddings route using OpenAI text-embedding-3-small, 2) Implement /api/match/calculate route with caching logic, 3) Build the calculate_match_score PostgreSQL function with bio similarity, interest overlap, and age proximity scoring, 4) Create the match_scores caching table and refresh logic, 5) Add mutual visibility enforcement in matching."
+claude --subagent match-engineer "Read docs/MATCHING_SYSTEM.md. Build matching engine: 1) Create app/api/match/generate-embeddings/route.ts using OpenAI text-embedding-3-small model, 2) Implement app/api/match/calculate/route.ts with caching to match_scores table, 3) In Supabase SQL editor, create the calculate_match_score function with bio similarity (30%), interest overlap (40%), age proximity (20%), 4) Create helper functions for each scoring component, 5) Test with sample user pairs."
 ```
 
 **Terminal 3 - Testing Foundation:**
 ```bash
-claude "Set up comprehensive testing: 1) Configure Jest and React Testing Library, 2) Write unit tests for matching algorithm functions, 3) Create integration tests for auth flow, 4) Add tests for profile creation and updates, 5) Write tests for privacy controls and mutual visibility, 6) Set up test database with sample users."
+claude --subagent test-engineer "Set up testing infrastructure: 1) Configure Jest and React Testing Library in jest.config.js, 2) Write tests/__tests__/matching.test.ts for scoring algorithms, 3) Create tests/__tests__/auth.test.tsx for login/signup flows, 4) Write tests/__tests__/profile.test.tsx for profile CRUD operations, 5) Add tests/__tests__/privacy.test.ts for mutual visibility rules, 6) Create test fixtures with 10 sample users."
 ```
 
 ---
@@ -83,17 +83,17 @@ claude "Set up comprehensive testing: 1) Configure Jest and React Testing Librar
 
 **Terminal 1 - Event Management:**
 ```bash
-claude "Review docs/DATABASE_SCHEMA.md. Build event management: 1) Create event listing page at app/(protected)/events/page.tsx showing upcoming events, 2) Build event detail page at app/(protected)/events/[id]/page.tsx, 3) Implement RSVP functionality with capacity checking, 4) Add event cards showing attendee count and match potential, 5) Create past events archive page, 6) Build event filtering by date and location."
+claude --subagent frontend-builder "Create event system UI: 1) Build app/(protected)/events/page.tsx with upcoming events grid using Tailwind cards, 2) Create app/(protected)/events/[id]/page.tsx showing event details and attendees, 3) Implement RSVP component with optimistic updates using React Query, 4) Add attendee counter with capacity indicator, 5) Build app/(protected)/events/past/page.tsx for event history, 6) Add date/location filters using URL search params."
 ```
 
 **Terminal 2 - Event Matching:**
 ```bash
-claude "Review docs/MATCHING_SYSTEM.md. Implement event-specific matching: 1) Create /api/match/event/[eventId] route that calls get_event_matches database function, 2) Build 'People to Meet' component showing top 5 matches with photos and percentages, 3) Add match explanation display (shared interests, reasons), 4) Create /api/events/suggested route for personalized event recommendations, 5) Build favorited attendee indicators."
+claude --subagent match-engineer "Read docs/MATCHING_SYSTEM.md. Build event matching features: 1) Create app/api/match/event/[eventId]/route.ts that calls the get_event_matches database function, 2) Build PeopleToMeet component showing top 5 matches with photos and match percentages, 3) Create match explanation cards showing shared interests, 4) Implement app/api/events/suggested/route.ts for personalized event recommendations based on match potential, 5) Add visual indicators for events where favorited users are attending."
 ```
 
 **Terminal 3 - Calendar Integration:**
 ```bash
-claude "Review docs/API_ROUTES.md. Implement calendar features: 1) Create /api/calendar/event/[eventId] route generating ICS files, 2) Use ics.js library to create proper calendar events with reminders, 3) Add match information to event description, 4) Build calendar download button component, 5) Test with Google Calendar, Outlook, and Apple Calendar, 6) Add 15-minute meeting slot suggestions within events."
+claude --subagent integration-specialist "Read docs/API_ROUTES.md. Build calendar integration: 1) Install ics package and create app/api/calendar/event/[eventId]/route.ts, 2) Generate proper ICS files with event details and top 3 matches in description, 3) Add recurring reminders at 24h and 1h before event, 4) Create CalendarDownloadButton component with icon, 5) Test downloads with Google Calendar, Outlook, and Apple Calendar, 6) Add timezone handling with date-fns-tz."
 ```
 
 ---
@@ -104,17 +104,17 @@ claude "Review docs/API_ROUTES.md. Implement calendar features: 1) Create /api/c
 
 **Terminal 1 - Chat System:**
 ```bash
-claude "Review docs/DATABASE_SCHEMA.md and docs/API_ROUTES.md. Build messaging: 1) Create chat interface at app/(protected)/chat/page.tsx, 2) Implement /api/chat/send and /api/chat/conversations routes, 3) Add real-time updates using Supabase Realtime, 4) Build conversation list with last message preview, 5) Implement message deletion and read receipts, 6) Add blocking check before sending messages."
+claude --subagent api-engineer "Read docs/DATABASE_SCHEMA.md and docs/API_ROUTES.md. Build messaging system: 1) Create app/(protected)/chat/page.tsx with conversation list, 2) Implement app/api/chat/send/route.ts with blocking checks, 3) Create app/api/chat/conversations/route.ts to fetch message threads, 4) Set up Supabase Realtime subscription for new messages, 5) Add message deletion with soft delete flags, 6) Implement read receipts and typing indicators."
 ```
 
 **Terminal 2 - Social Features:**
 ```bash
-claude "Implement social features: 1) Create favorites/bookmarks system with star button on profiles, 2) Build favorites page showing bookmarked profiles, 3) Add 'Favorites Attending' indicator on events, 4) Implement /api/profile/favorite route, 5) Create meeting scheduler for 15-minute slots at events, 6) Build notification system for high matches (80%+)."
+claude --subagent frontend-builder "Add social features: 1) Create FavoriteButton component with star icon that calls app/api/profile/favorite/route.ts, 2) Build app/(protected)/favorites/page.tsx showing bookmarked profiles in a grid, 3) Add 'Favorites Attending' badge on event cards, 4) Create meeting request system with 15-minute slots using meeting_slots table, 5) Build notification toast component for high matches (80%+), 6) Add social proof indicators throughout the UI."
 ```
 
 **Terminal 3 - Privacy & Safety:**
 ```bash
-claude "Review docs/DATABASE_SCHEMA.md. Implement privacy features: 1) Create blocking system with /api/privacy/block route, 2) Build report user functionality with reason selection, 3) Implement GDPR data export at /api/privacy/export, 4) Add account deletion with cascading deletes, 5) Create privacy settings page with field-level controls, 6) Test mutual visibility rules thoroughly."
+claude --subagent privacy-guardian "Read docs/DATABASE_SCHEMA.md. Implement privacy features: 1) Create app/api/privacy/block/route.ts with bidirectional blocking, 2) Build ReportUserModal component with reason selection dropdown, 3) Implement app/api/privacy/export/route.ts for GDPR data export as JSON, 4) Add app/api/privacy/delete/route.ts for complete account deletion with CASCADE, 5) Create app/(protected)/settings/privacy/page.tsx with field visibility toggles, 6) Write tests to verify mutual visibility rules work correctly."
 ```
 
 ---
@@ -125,17 +125,17 @@ claude "Review docs/DATABASE_SCHEMA.md. Implement privacy features: 1) Create bl
 
 **Terminal 1 - PWA Setup:**
 ```bash
-claude "Configure PWA features: 1) Set up next-pwa with manifest.json, 2) Create service worker with offline caching strategy, 3) Add install prompt for mobile devices, 4) Configure icons and splash screens, 5) Implement background sync for messages, 6) Add push notifications for event reminders."
+claude --subagent integration-specialist "Configure PWA features: 1) Install next-pwa and create next.config.js with PWA configuration, 2) Create public/manifest.json with app metadata and icons, 3) Generate app icons in multiple sizes (192x192, 512x512) and add to public/, 4) Create service worker with cache-first strategy for static assets, 5) Implement install prompt component for mobile browsers, 6) Set up background sync for offline message queue."
 ```
 
 **Terminal 2 - Mobile UI Polish:**
 ```bash
-claude "Optimize for mobile: 1) Make all components responsive with Tailwind breakpoints, 2) Add touch-friendly buttons (min 44px), 3) Implement swipe gestures for navigation, 4) Create bottom navigation for mobile, 5) Optimize images with next/image, 6) Add loading skeletons for better perceived performance."
+claude --subagent frontend-builder "Optimize all UI for mobile: 1) Add responsive breakpoints to all components using Tailwind's sm/md/lg prefixes, 2) Ensure all buttons are minimum 44px touch targets, 3) Implement swipe gestures using react-swipeable for navigation, 4) Create MobileNavigation component with bottom tab bar, 5) Replace all img tags with next/image for optimization, 6) Add loading skeletons using shadcn/ui Skeleton component."
 ```
 
 **Terminal 3 - Performance:**
 ```bash
-claude "Optimize performance: 1) Implement React Query for server state caching, 2) Add pagination to event and profile lists, 3) Optimize database queries with proper indexes, 4) Implement image lazy loading, 5) Add Vercel Edge caching for API routes, 6) Create loading states and error boundaries."
+claude --subagent api-engineer "Optimize performance: 1) Set up React Query in app/providers.tsx with proper cache configuration, 2) Add pagination to app/api/events/route.ts and app/api/profiles/route.ts, 3) Review and optimize all database queries in Supabase, 4) Implement image optimization with sharp in photo upload, 5) Add Vercel Edge Config for API route caching, 6) Create proper error boundaries with error.tsx files."
 ```
 
 ---
@@ -146,17 +146,17 @@ claude "Optimize performance: 1) Implement React Query for server state caching,
 
 **Terminal 1 - Final Features:**
 ```bash
-claude "Add final touches: 1) Create landing page with clear value proposition, 2) Build onboarding tour for new users, 3) Add analytics tracking with Vercel Analytics, 4) Create admin panel for event management, 5) Implement email notifications for RSVPs, 6) Add Discord webhook integration for event announcements."
+claude --subagent frontend-builder "Add final UI touches: 1) Create landing page at app/(public)/page.tsx with hero section and clear CTAs, 2) Build onboarding tour using intro.js or similar, 3) Add Vercel Analytics script to layout.tsx, 4) Create app/(protected)/admin/page.tsx for event management (check is_admin flag), 5) Set up email notification preferences UI, 6) Add loading states and error messages throughout."
 ```
 
 **Terminal 2 - Testing & QA:**
 ```bash
-claude "Complete testing: 1) Write E2E tests with Playwright for critical user paths, 2) Test the complete flow: signup → profile → browse → RSVP → match → chat, 3) Load test with 100 concurrent users, 4) Test on multiple browsers and devices, 5) Verify GDPR compliance, 6) Check accessibility with screen readers."
+claude --subagent test-engineer "Complete all testing: 1) Write E2E tests in tests/e2e/ using Playwright for signup→profile→event→RSVP→match flow, 2) Test complete user journey on mobile Safari and Chrome, 3) Run load testing with 100 concurrent users using k6 or similar, 4) Test all browsers (Chrome, Firefox, Safari, Edge), 5) Verify GDPR compliance with data export/delete, 6) Run accessibility audit with axe-core."
 ```
 
 **Terminal 3 - Deployment:**
 ```bash
-claude "Deploy to production: 1) Set up Vercel project with environment variables, 2) Configure custom domain helloeveryone.fun, 3) Set up preview deployments for branches, 4) Configure CORS and security headers, 5) Set up error monitoring with Sentry, 6) Create deployment checklist and verify all features."
+claude --subagent devops-engineer "Deploy to production: 1) Create Vercel project and connect GitHub repo, 2) Add all environment variables from .env.local to Vercel dashboard, 3) Configure custom domain helloeveryone.fun in Vercel settings, 4) Set up preview deployments for pull requests, 5) Add security headers in next.config.js, 6) Install Sentry and add error monitoring, 7) Run 'npm run build' and fix any build errors before deploying."
 ```
 
 ---
@@ -165,23 +165,32 @@ claude "Deploy to production: 1) Set up Vercel project with environment variable
 
 ### Check Progress
 ```bash
-# Terminal 1
-claude "Review the codebase and list what's been completed and what's remaining from docs/IMPLEMENTATION_PHASES.md Phase X"
+# Check what's completed in current phase
+claude --subagent test-engineer "Review the codebase and run all tests. Report which features are working and which need fixes."
 ```
 
 ### Fix Issues
 ```bash
 # If tests fail
-claude "Run the test suite, identify failures, and fix them"
+claude --subagent test-engineer "Run npm test, identify all failures, and fix them one by one"
 
 # If build fails
-claude "Run next build, identify the errors, and resolve them"
+claude --subagent devops-engineer "Run npm run build, identify the errors, and resolve them"
+
+# If TypeScript errors
+claude --subagent api-engineer "Run npm run type-check and fix all TypeScript errors"
 ```
 
 ### Code Review
 ```bash
 # After each phase
-claude "Review the code for the [feature] implementation, check for security issues, performance problems, and suggest improvements"
+claude --subagent test-engineer "Review the implementation of [feature name], check for security issues, performance problems, and edge cases"
+```
+
+### Database Debugging
+```bash
+# If database issues
+claude --subagent db-architect "Connect to Supabase SQL editor, check the schema, and fix any missing tables or functions"
 ```
 
 ---
