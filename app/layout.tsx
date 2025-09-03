@@ -75,13 +75,13 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
+    { media: '(prefers-color-scheme: light)', color: '#6366f1' },
+    { media: '(prefers-color-scheme: dark)', color: '#6366f1' },
   ],
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
   viewportFit: 'cover',
 }
 
@@ -92,6 +92,23 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.variable}>
+      <head>
+        {/* PWA specific meta tags */}
+        <meta name="application-name" content="HelloEveryone" />
+        <meta name="apple-mobile-web-app-title" content="HelloEveryone" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#6366f1" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        
+        {/* Apple-specific meta tags */}
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        
+        {/* Favicon and icons */}
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+      </head>
       <body className={`font-sans antialiased min-h-screen bg-background text-foreground`}>
         <AuthProvider>
           <div id="root">

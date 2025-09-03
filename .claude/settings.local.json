@@ -9,7 +9,15 @@
       "Bash(npm run build:*)",
       "Bash(npm run type-check:*)",
       "Bash(npm install:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Read(C:\\c\\Users\\Allan\\source\\repos\\helloeveryone/**)",
+      "Read(C:\\c\\Users\\Allan\\source\\repos\\helloeveryone/**)",
+      "Read(C:\\c\\Users\\Allan\\source\\repos\\helloeveryone\\tests\\__tests__/**)",
+      "Read(C:\\c\\Users\\Allan\\source\\repos\\helloeveryone/**)",
+      "Bash(test:*)",
+      "Bash(pwd:*)"
     ],
     "deny": [],
     "ask": []
