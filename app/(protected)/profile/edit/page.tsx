@@ -27,15 +27,15 @@ export default function ProfileEdit() {
       interests: {
         music_genres: [],
         food_preferences: [],
-        activities: []
+        activities: [],
       },
       bio: '',
       visible_fields: {
         age_visible: true,
         interests_visible: true,
-        bio_visible: true
-      }
-    }
+        bio_visible: true,
+      },
+    },
   })
 
   // Load existing profile data
@@ -60,14 +60,14 @@ export default function ProfileEdit() {
             interests: profile.interests || {
               music_genres: [],
               food_preferences: [],
-              activities: []
+              activities: [],
             },
             bio: profile.bio || '',
             visible_fields: profile.visible_fields || {
               age_visible: true,
               interests_visible: true,
-              bio_visible: true
-            }
+              bio_visible: true,
+            },
           })
           setPhotoUrl(profile.photo_url)
         }
@@ -95,7 +95,7 @@ export default function ProfileEdit() {
         bio: data.bio || null,
         photo_url: photoUrl,
         visible_fields: data.visible_fields,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       }
 
       const { error } = await supabase
@@ -115,30 +115,28 @@ export default function ProfileEdit() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-2xl">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Edit Profile
-              </h1>
-              <p className="text-gray-600 mt-1">
+              <h1 className="text-3xl font-bold text-gray-900">Edit Profile</h1>
+              <p className="mt-1 text-gray-600">
                 Update your information and preferences
               </p>
             </div>
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="px-4 py-2 text-gray-600 transition-colors hover:text-gray-900"
             >
               Cancel
             </button>
@@ -146,8 +144,11 @@ export default function ProfileEdit() {
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 p-6">
+        <div className="rounded-lg bg-white shadow-sm">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-8 p-6"
+          >
             {/* Photo Upload */}
             <PhotoUpload
               currentPhotoUrl={photoUrl}
@@ -156,19 +157,22 @@ export default function ProfileEdit() {
 
             {/* Basic Information */}
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              <h2 className="border-b border-gray-200 pb-2 text-xl font-semibold text-gray-900">
                 Basic Information
               </h2>
-              
+
               <div>
-                <label htmlFor="display_name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="display_name"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Display Name *
                 </label>
                 <input
                   id="display_name"
                   type="text"
                   {...form.register('display_name')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {form.formState.errors.display_name && (
                   <p className="mt-1 text-sm text-red-600">
@@ -178,7 +182,10 @@ export default function ProfileEdit() {
               </div>
 
               <div>
-                <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="age"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Age *
                 </label>
                 <input
@@ -187,7 +194,7 @@ export default function ProfileEdit() {
                   min="25"
                   max="50"
                   {...form.register('age', { valueAsNumber: true })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 {form.formState.errors.age && (
                   <p className="mt-1 text-sm text-red-600">
@@ -197,14 +204,17 @@ export default function ProfileEdit() {
               </div>
 
               <div>
-                <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="location"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Location
                 </label>
                 <input
                   id="location"
                   type="text"
                   {...form.register('location')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="City, State (optional)"
                 />
               </div>
@@ -212,10 +222,10 @@ export default function ProfileEdit() {
 
             {/* Interests */}
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              <h2 className="border-b border-gray-200 pb-2 text-xl font-semibold text-gray-900">
                 Interests
               </h2>
-              
+
               <InterestSelector
                 form={form}
                 category="music_genres"
@@ -243,16 +253,16 @@ export default function ProfileEdit() {
 
             {/* Bio */}
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              <h2 className="border-b border-gray-200 pb-2 text-xl font-semibold text-gray-900">
                 Bio
               </h2>
-              
+
               <div>
                 <textarea
                   id="bio"
                   rows={4}
                   {...form.register('bio')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Tell others about yourself, your interests, what you're looking for in connections..."
                 />
                 <div className="mt-1 flex justify-between">
@@ -270,37 +280,39 @@ export default function ProfileEdit() {
 
             {/* Privacy Settings */}
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              <h2 className="border-b border-gray-200 pb-2 text-xl font-semibold text-gray-900">
                 Privacy Settings
               </h2>
               <p className="text-sm text-gray-600">
                 Control what information is visible to potential matches
               </p>
-              
+
               <div className="space-y-3">
                 <label className="flex items-center space-x-3">
                   <input
                     type="checkbox"
                     {...form.register('visible_fields.age_visible')}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">Show my age</span>
                 </label>
-                
+
                 <label className="flex items-center space-x-3">
                   <input
                     type="checkbox"
                     {...form.register('visible_fields.interests_visible')}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">Show my interests</span>
+                  <span className="text-sm text-gray-700">
+                    Show my interests
+                  </span>
                 </label>
-                
+
                 <label className="flex items-center space-x-3">
                   <input
                     type="checkbox"
                     {...form.register('visible_fields.bio_visible')}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">Show my bio</span>
                 </label>
@@ -308,11 +320,11 @@ export default function ProfileEdit() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end pt-6 border-t border-gray-200">
+            <div className="flex justify-end border-t border-gray-200 pt-6">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
+                className="min-h-[44px] rounded-lg bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>

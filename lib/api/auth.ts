@@ -1,11 +1,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { NextRequest } from 'next/server'
 import type { User } from '@supabase/supabase-js'
 
 async function createSupabaseServerClient() {
   const cookieStore = await cookies()
-  
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -30,15 +31,26 @@ async function createSupabaseServerClient() {
   )
 }
 
-export async function requireAuth(): Promise<User> {
+/**
+ * Require authentication for API routes and server components
+ * @param request - Optional NextRequest for API routes
+ * @returns User object if authenticated
+ * @throws Redirects to login for server components, throws error for API routes
+ */
+export async function requireAuth(request?: NextRequest): Promise<User> {
   const supabase = await createSupabaseServerClient()
-  
+
   const {
     data: { session },
     error,
   } = await supabase.auth.getSession()
 
   if (error || !session?.user) {
+    // If called from API route (with request), throw error
+    // If called from server component (no request), redirect
+    if (request) {
+      throw new Error('Unauthorized')
+    }
     redirect('/login')
   }
 
@@ -47,7 +59,7 @@ export async function requireAuth(): Promise<User> {
 
 export async function getCurrentUser(): Promise<User | null> {
   const supabase = await createSupabaseServerClient()
-  
+
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -57,7 +69,7 @@ export async function getCurrentUser(): Promise<User | null> {
 
 export async function requireAuthAPI(): Promise<User> {
   const supabase = await createSupabaseServerClient()
-  
+
   const {
     data: { session },
     error,

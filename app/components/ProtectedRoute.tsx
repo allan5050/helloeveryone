@@ -9,7 +9,10 @@ interface ProtectedRouteProps {
   redirectTo?: string
 }
 
-export default function ProtectedRoute({ children, redirectTo = '/login' }: ProtectedRouteProps) {
+export default function ProtectedRoute({
+  children,
+  redirectTo = '/login',
+}: ProtectedRouteProps) {
   const { user, loading } = useAuth()
   const router = useRouter()
 
@@ -21,8 +24,8 @@ export default function ProtectedRoute({ children, redirectTo = '/login' }: Prot
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-indigo-600"></div>
       </div>
     )
   }

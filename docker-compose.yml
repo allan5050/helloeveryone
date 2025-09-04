@@ -6,7 +6,7 @@ services:
     image: supabase/postgres:15.1.0.147
     container_name: helloeveryone_db
     ports:
-      - "54322:5432"
+      - '54322:5432'
     environment:
       POSTGRES_PASSWORD: your-super-secret-and-long-postgres-password
       POSTGRES_DB: postgres
@@ -26,7 +26,7 @@ services:
     depends_on:
       - db
     ports:
-      - "9999:9999"
+      - '9999:9999'
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 9999
@@ -55,13 +55,13 @@ services:
     depends_on:
       - db
     ports:
-      - "3001:3000"
+      - '3001:3000'
     environment:
       PGRST_DB_URI: postgres://postgres:your-super-secret-and-long-postgres-password@db:5432/postgres
       PGRST_DB_SCHEMAS: public
       PGRST_DB_ANON_ROLE: anon
       PGRST_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
-      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_DB_USE_LEGACY_GUCS: 'false'
     networks:
       - helloeveryone
 
@@ -73,7 +73,7 @@ services:
       - db
       - rest
     ports:
-      - "5000:5000"
+      - '5000:5000'
     environment:
       ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
       SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
@@ -93,8 +93,8 @@ services:
     image: inbucket/inbucket:stable
     container_name: helloeveryone_inbucket
     ports:
-      - "2500:2500" # SMTP
-      - "9000:9000" # Web UI
+      - '2500:2500' # SMTP
+      - '9000:9000' # Web UI
     environment:
       INBUCKET_WEB_ADDR: 0.0.0.0:9000
       INBUCKET_POP3_ADDR: 0.0.0.0:1100
@@ -107,7 +107,7 @@ services:
     image: redis:7-alpine
     container_name: helloeveryone_redis
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes

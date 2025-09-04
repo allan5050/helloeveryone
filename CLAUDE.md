@@ -1,9 +1,13 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this
+repository.
 
 ## Project Overview
-HelloEveryone.fun is a smart social matching platform that helps busy adults (25-50) find meaningful connections through intelligent matching at local events. Built with Next.js 14, Supabase, and TypeScript.
+
+HelloEveryone.fun is a smart social matching platform that helps busy adults (25-50) find meaningful
+connections through intelligent matching at local events. Built with Next.js 14, Supabase, and
+TypeScript.
 
 **Production URL**: https://helloeveryone.vercel.app  
 **GitHub**: allan5050/helloeveryone
@@ -11,6 +15,7 @@ HelloEveryone.fun is a smart social matching platform that helps busy adults (25
 ## Key Development Commands
 
 ### Development
+
 ```bash
 npm run dev          # Start Next.js dev server on http://localhost:3000
 npm run build        # Build production application
@@ -18,6 +23,7 @@ npm run start        # Start production server
 ```
 
 ### Testing & Quality
+
 ```bash
 npm run test         # Run Jest unit tests
 npm run test:watch   # Run tests in watch mode
@@ -28,6 +34,7 @@ npm run type-check   # Run TypeScript type checking (tsc --noEmit)
 ```
 
 ### Database
+
 ```bash
 npm run db:setup     # Initialize database tables and enable pgvector
 npm run db:seed      # Populate database with sample data
@@ -36,6 +43,7 @@ npm run db:seed      # Populate database with sample data
 ## Architecture Overview
 
 ### Tech Stack
+
 - **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS, PWA-enabled
 - **Database**: Supabase (PostgreSQL with pgvector for semantic matching)
 - **Matching Engine**: pgvector for semantic search with OpenAI embeddings
@@ -46,6 +54,7 @@ npm run db:seed      # Populate database with sample data
 - **Deployment**: Vercel (automatic deployments from GitHub)
 
 ### Project Structure
+
 ```
 app/                 # Next.js App Router pages
 ├── (public)/       # Public pages (login, signup, reset-password)
@@ -65,13 +74,16 @@ types/             # TypeScript type definitions
 ```
 
 ### Path Aliases
+
 - `@/*` maps to root directory
 - `@/components/*`, `@/lib/*`, `@/hooks/*`, `@/types/*` for clean imports
 
 ## Core Features & Implementation
 
 ### Matching Algorithm
+
 The matching system uses a sophisticated scoring algorithm:
+
 - 40% common interests (exact and fuzzy matching)
 - 30% bio semantic similarity (using pgvector cosine distance)
 - 20% age proximity (±5 years optimal)
@@ -80,18 +92,22 @@ The matching system uses a sophisticated scoring algorithm:
 Match scores must compute in <100ms. Uses materialized views for caching.
 
 ### Privacy-First Design
+
 - **Mutual Visibility**: Users can only filter by fields they share
 - **Progressive Disclosure**: Information revealed gradually as trust builds
 - All tables have Row Level Security (RLS) policies
 - Never expose raw embeddings or internal scores
 
 ### Database Schema
+
 Key tables: `profiles`, `events`, `rsvps`, `favorites`, `messages`, `match_scores`
+
 - Uses pgvector extension for semantic search
 - JSONB for flexible profile fields and interests
 - Materialized views for performance optimization
 
 ### PWA Requirements
+
 - Manifest at `/public/manifest.json`
 - Service worker via next-pwa
 - Mobile-first responsive design
@@ -100,25 +116,30 @@ Key tables: `profiles`, `events`, `rsvps`, `favorites`, `messages`, `match_score
 ## Development Guidelines
 
 ### Code Conventions
+
 - Strict TypeScript (`strict: true` in tsconfig.json)
 - Path aliases for clean imports
 - Component-based architecture with feature organization
 - Server components by default, client components when needed
 
 ### Testing Strategy
+
 - Unit tests with Jest for business logic
 - Integration tests for API endpoints
 - E2E tests with Playwright for critical user flows
 - Test coverage target: >80%
 
 ### Performance Targets
+
 - Page load: <2s on 3G
 - Match computation: <100ms
 - PWA score: >90
 - Bundle size optimization with code splitting
 
 ### Specialized Agents
+
 The `.claude/agents/` directory contains specialized agent configurations:
+
 - **db-architect**: Database schema, migrations, pgvector optimization
 - **api-engineer**: Next.js API routes, Supabase queries, OpenAI integration
 - **frontend-builder**: React/Next.js UI, Tailwind CSS, PWA features
@@ -129,6 +150,7 @@ The `.claude/agents/` directory contains specialized agent configurations:
 - **integration-specialist**: Calendar systems, file uploads, third-party services
 
 ## Important Notes
+
 - Never commit secrets or API keys - use environment variables
 - All database changes require proper migrations
 - Follow mutual visibility rules for all matching features
@@ -136,6 +158,7 @@ The `.claude/agents/` directory contains specialized agent configurations:
 - Use ICS files for calendar integration (no OAuth complexity)
 
 ## Authentication Implementation
+
 - **Auth Provider**: `app/contexts/AuthContext.tsx` - Client-side auth state management
 - **Server Auth**: `lib/api/auth.ts` - Server-side auth helpers (requireAuth, getCurrentUser)
 - **Auth Routes**: `/login`, `/signup`, `/auth/reset-password`
@@ -144,7 +167,9 @@ The `.claude/agents/` directory contains specialized agent configurations:
 - **OAuth**: Google OAuth ready (requires Google Client ID configuration)
 
 ## Environment Variables
+
 Required in `.env.local` and Vercel:
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key

@@ -1,16 +1,20 @@
 # HelloEveryone.fun - Enhanced Implementation Plan
+
 ## Smart Social Matching Platform for Real Connections
 
 ---
 
 ## 🎯 **Core Mission**
-Help busy 25-50 year olds find **relevant** friends through smart matching at local events, emphasizing quality connections over quantity.
+
+Help busy 25-50 year olds find **relevant** friends through smart matching at local events,
+emphasizing quality connections over quantity.
 
 ---
 
 ## 🏗️ **Tech Stack (Pragmatic Choices)**
 
 ### Core Infrastructure
+
 - **Frontend**: Next.js 14+ (App Router) - PWA enabled for mobile
 - **Database**: Supabase (PostgreSQL + Auth + Realtime + Storage + Vector embeddings)
 - **Matching Engine**: PostgreSQL with pgvector for semantic search
@@ -21,6 +25,7 @@ Help busy 25-50 year olds find **relevant** friends through smart matching at lo
 - **Search**: Supabase full-text search + pgvector for semantic matching
 
 ### Why This Stack?
+
 - **Supabase pgvector**: Built-in semantic similarity without external services
 - **PWA over native**: One codebase, works everywhere
 - **ICS files**: Universal calendar format, no API integrations needed
@@ -43,13 +48,13 @@ CREATE TABLE profiles (
   photo_url TEXT,
   bio TEXT, -- free text for semantic matching
   bio_embedding vector(1536), -- OpenAI embeddings for semantic search
-  
+
   -- Privacy settings (field-level visibility)
   visible_fields JSONB DEFAULT '{"first_name": true, "photo": true}'::jsonb,
-  
+
   -- Structured interests for exact matching
   interests JSONB DEFAULT '{}'::jsonb, -- {music: ["rock", "jazz"], food: ["italian", "thai"]}
-  
+
   city TEXT DEFAULT 'Current City',
   created_at TIMESTAMP DEFAULT NOW(),
   last_active TIMESTAMP DEFAULT NOW()
@@ -132,34 +137,43 @@ CREATE TABLE match_scores (
 ## 🎨 **Priority Features (MVP to Full Product)**
 
 ### **Phase 1: Core Platform** (Week 1-2)
+
 ✅ **Must Have**
+
 - User registration with email verification
 - Basic profile (name, age, photo, 3 interests)
 - Event listing and RSVP
 - Simple profile privacy (show/hide photo)
 
 ### **Phase 2: Smart Matching** (Week 3-4)
+
 ✅ **High Value**
+
 - Semantic bio matching using pgvector
 - Interest-based matching (exact + fuzzy)
 - "People to Meet" suggestions at events
 - Match score visualization
 
 ### **Phase 3: Connection Tools** (Week 5)
+
 ✅ **Medium Value**
+
 - Profile favorites/bookmarks
 - Simple 1-on-1 async chat
 - Calendar download (.ics files)
 - Block/report functionality
 
 ### **Phase 4: Enhanced Experience** (Week 6)
+
 🔄 **Nice to Have**
+
 - 15-minute meeting scheduler
 - Event suggestions based on favorites attending
 - Past events archive
 - GDPR compliance tools
 
 ### **Descoped Features** ❌
+
 - Discussion boards (use Discord)
 - Payment processing
 - Native mobile apps
@@ -171,15 +185,20 @@ CREATE TABLE match_scores (
 ## 🤖 **Claude Code Agent Configurations**
 
 ### **1. Database Architect Agent** (`db-architect`)
+
 ```markdown
 ---
 name: db-architect
-description: Database and matching algorithm specialist. MUST BE USED for schema changes, pgvector setup, and matching queries.
+description:
+  Database and matching algorithm specialist. MUST BE USED for schema changes, pgvector setup, and
+  matching queries.
 tools: bash, write, read, grep
 ---
+
 You are a PostgreSQL and Supabase expert specializing in efficient matching algorithms.
 
 PRIMARY RESPONSIBILITIES:
+
 1. Set up Supabase with pgvector extension for semantic search
 2. Create all tables with proper indexes for performance
 3. Implement RLS policies for privacy (mutual visibility)
@@ -192,8 +211,9 @@ PRIMARY RESPONSIBILITIES:
 6. Set up database backup strategy
 
 MATCHING ALGORITHM PRIORITIES:
+
 - Age similarity (±5 years): 20% weight
-- Common interests: 40% weight  
+- Common interests: 40% weight
 - Bio semantic similarity: 30% weight
 - Location: 10% weight
 
@@ -201,15 +221,19 @@ Keep queries performant with proper indexes.
 ```
 
 ### **2. Frontend Builder Agent** (`ui-builder`)
+
 ```markdown
 ---
 name: ui-builder
-description: React/Next.js UI specialist with PWA expertise. Builds mobile-first, accessible interfaces.
+description:
+  React/Next.js UI specialist with PWA expertise. Builds mobile-first, accessible interfaces.
 tools: write, read, bash
 ---
+
 You are a frontend expert focused on clean, mobile-first interfaces.
 
 PRIMARY TASKS:
+
 1. Set up Next.js with PWA configuration (next-pwa)
 2. Build responsive components with Tailwind CSS
 3. Create profile setup flow with photo upload
@@ -221,6 +245,7 @@ PRIMARY TASKS:
 9. Add calendar download buttons (using ics.js)
 
 DESIGN PRINCIPLES:
+
 - Mobile-first (60% mobile users)
 - Clear match indicators (percentage badges)
 - Trust signals (verified badges, public venues)
@@ -228,15 +253,19 @@ DESIGN PRINCIPLES:
 ```
 
 ### **3. Matching Engine Agent** (`match-engine`)
+
 ```markdown
 ---
 name: match-engine
-description: Builds semantic matching and recommendation systems. PROACTIVELY optimizes match quality.
+description:
+  Builds semantic matching and recommendation systems. PROACTIVELY optimizes match quality.
 tools: write, read, bash, grep
 ---
+
 You specialize in building efficient matching algorithms.
 
 PRIMARY TASKS:
+
 1. Implement bio embedding generation (using OpenAI API)
 2. Create match scoring algorithm:
    - Age proximity scoring
@@ -249,6 +278,7 @@ PRIMARY TASKS:
 6. Add match reason explanations
 
 OPTIMIZATION GOALS:
+
 - Match computation < 100ms
 - Batch process embeddings
 - Cache match scores (refresh hourly)
@@ -256,15 +286,19 @@ OPTIMIZATION GOALS:
 ```
 
 ### **4. Integration Agent** (`integration-agent`)
+
 ```markdown
 ---
 name: integration-agent
-description: Handles external integrations and file formats. Specializes in calendar systems and PWA features.
+description:
+  Handles external integrations and file formats. Specializes in calendar systems and PWA features.
 tools: write, read, bash
 ---
+
 You handle all external integrations and cross-platform compatibility.
 
 PRIMARY TASKS:
+
 1. Implement .ics file generation for events
 2. Add PWA manifest and service worker
 3. Set up Supabase Storage for photos
@@ -274,21 +308,27 @@ PRIMARY TASKS:
 7. Create data export for GDPR compliance
 
 COMPATIBILITY REQUIREMENTS:
+
 - Support all major calendars (Google, Outlook, Apple)
 - Work on iOS Safari, Android Chrome
 - Offline-capable PWA features
 ```
 
 ### **5. Test Engineer Agent** (`test-engineer`)
+
 ```markdown
 ---
 name: test-engineer
-description: Testing specialist ensuring code quality. PROACTIVELY writes tests before and after feature implementation.
+description:
+  Testing specialist ensuring code quality. PROACTIVELY writes tests before and after feature
+  implementation.
 tools: bash, write, read, grep
 ---
+
 You ensure comprehensive test coverage and quality.
 
 PRIMARY TASKS:
+
 1. Set up Jest + React Testing Library
 2. Write unit tests for:
    - Matching algorithms
@@ -309,21 +349,25 @@ PRIMARY TASKS:
    - Image upload/compression
 
 COVERAGE GOALS:
+
 - Unit tests: 80% coverage
 - Critical paths: 100% E2E coverage
 - Load testing: 100 concurrent users
 ```
 
 ### **6. Privacy Guardian Agent** (`privacy-guardian`)
+
 ```markdown
 ---
 name: privacy-guardian
 description: Privacy and security specialist. Ensures GDPR compliance and mutual visibility rules.
 tools: write, read, grep
 ---
+
 You specialize in privacy-first architecture and compliance.
 
 PRIMARY TASKS:
+
 1. Implement mutual visibility system:
    - Field-level privacy controls
    - Bidirectional matching restrictions
@@ -342,6 +386,7 @@ PRIMARY TASKS:
    - Automatic flag triggers
 
 PRIVACY PRINCIPLES:
+
 - Default to private
 - Mutual consent for visibility
 - Clear data ownership
@@ -353,99 +398,121 @@ PRIVACY PRINCIPLES:
 ## 🚀 **Parallel Execution Plan**
 
 ### **Week 1: Foundation Sprint**
+
 Run these 3 agents in parallel:
 
 **Terminal 1 - Database Setup:**
+
 ```bash
 claude --subagent db-architect "Set up Supabase project with pgvector. Create all tables from the schema including profiles, events, rsvps, favorites, messages, blocks, and match_scores. Add RLS policies for mutual visibility."
 ```
 
 **Terminal 2 - Frontend Setup:**
+
 ```bash
 claude --subagent ui-builder "Create Next.js app with TypeScript, Tailwind, and PWA support using next-pwa. Set up basic layout components and mobile-first responsive design."
 ```
 
 **Terminal 3 - Testing Setup:**
+
 ```bash
 claude --subagent test-engineer "Set up Jest, React Testing Library, and Playwright. Create test structure and write initial test cases for user registration and event RSVP flows."
 ```
 
 ### **Week 2: Authentication & Profiles**
+
 Run these 3 agents in parallel:
 
 **Terminal 1 - Auth System:**
+
 ```bash
 claude --subagent privacy-guardian "Implement Supabase Auth with email verification and Google OAuth. Add password reset flow and session management with proper security headers."
 ```
 
 **Terminal 2 - Profile UI:**
+
 ```bash
 claude --subagent ui-builder "Build profile creation flow with photo upload to Supabase Storage. Add interest selection (music, food, activities) and bio field. Make it mobile-friendly."
 ```
 
 **Terminal 3 - Profile Tests:**
+
 ```bash
 claude --subagent test-engineer "Write comprehensive tests for profile creation, photo upload, and privacy settings. Include edge cases for file size limits and invalid data."
 ```
 
 ### **Week 3: Matching Engine**
+
 Run these 2 agents in parallel:
 
 **Terminal 1 - Matching Algorithm:**
+
 ```bash
 claude --subagent match-engine "Implement bio embedding generation using OpenAI API. Create match scoring with age similarity (±5 years), interest overlap, and semantic similarity. Store in match_scores table."
 ```
 
 **Terminal 2 - Matching UI:**
+
 ```bash
 claude --subagent ui-builder "Create 'People to Meet' component showing match percentages and reasons. Add visual indicators for high matches (80%+). Include profile preview cards."
 ```
 
 ### **Week 4: Events & Calendar**
+
 Run these 3 agents in parallel:
 
 **Terminal 1 - Event Features:**
+
 ```bash
 claude --subagent db-architect "Create event CRUD operations with attendee matching. Add queries to find best matches among event attendees. Include favorited people indicators."
 ```
 
 **Terminal 2 - Calendar Integration:**
+
 ```bash
 claude --subagent integration-agent "Implement .ics file generation for events using ics.js library. Support recurring reminders and meeting slots. Ensure compatibility with Google Calendar, Outlook, and Apple Calendar."
 ```
 
 **Terminal 3 - Event UI:**
+
 ```bash
 claude --subagent ui-builder "Build event pages showing attendee matches. Add RSVP with match preview. Include calendar download buttons and 'Add to Calendar' functionality."
 ```
 
 ### **Week 5: Communication & Privacy**
+
 Run these 3 agents in parallel:
 
 **Terminal 1 - Chat System:**
+
 ```bash
 claude --subagent ui-builder "Build simple 1-on-1 async chat interface using Supabase Realtime. Add message deletion and typing indicators. Keep it lightweight - no file sharing."
 ```
 
 **Terminal 2 - Privacy Controls:**
+
 ```bash
 claude --subagent privacy-guardian "Implement mutual visibility rules - if someone hides their age, they can't filter by age. Add block functionality and GDPR data export/deletion endpoints."
 ```
 
 **Terminal 3 - Integration Tests:**
+
 ```bash
 claude --subagent test-engineer "Write E2E tests for complete user journey: signup → profile → browse events → RSVP → view matches → chat. Test on mobile browsers."
 ```
 
 ### **Week 6: Polish & Deploy**
+
 Run these 2 agents in parallel:
 
 **Terminal 1 - Performance:**
+
 ```bash
 claude --subagent match-engine "Optimize match queries with proper indexes. Implement caching strategy for match scores. Add batch processing for embeddings."
 ```
 
 **Terminal 2 - Deployment:**
+
 ```bash
 claude --subagent integration-agent "Deploy to Vercel with environment variables. Configure custom domain helloeveryone.fun. Set up monitoring and error tracking."
 ```
@@ -492,12 +559,14 @@ helloeveryone/
 ## 🎯 **Success Metrics**
 
 ### **Technical KPIs**
+
 - Match computation: < 100ms
 - Page load: < 2s on 3G
 - PWA score: > 90
 - Test coverage: > 80%
 
 ### **User KPIs**
+
 - Event → Connection rate: > 30%
 - Match accuracy satisfaction: > 70%
 - Return user rate: > 40%
@@ -508,6 +577,7 @@ helloeveryone/
 ## 💡 **Architecture Decisions**
 
 ### **Why These Choices**
+
 1. **pgvector over Pinecone**: Free, integrated with Supabase
 2. **ICS files over Calendar APIs**: No OAuth complexity
 3. **PWA over React Native**: Single codebase, easier updates
@@ -515,6 +585,7 @@ helloeveryone/
 5. **Discord for groups**: Offload community management
 
 ### **What We're NOT Building**
+
 - ❌ Video chat (use Discord)
 - ❌ AI conversation starters (future)
 - ❌ Personality quizzes (keep it simple)
@@ -526,19 +597,21 @@ helloeveryone/
 ## 🔐 **Privacy-First Design**
 
 ### **Mutual Visibility Rules**
+
 ```typescript
 // If user hides age, they can't filter by age
 if (!profile.visible_fields.age) {
-  disableAgeFiltering();
+  disableAgeFiltering()
 }
 
 // Matches only shown if both users share the field
 if (user1.visible_fields.occupation && user2.visible_fields.occupation) {
-  showOccupationMatch();
+  showOccupationMatch()
 }
 ```
 
 ### **Progressive Disclosure**
+
 1. **Public**: First name, photo (optional)
 2. **After RSVP**: Interests, bio preview
 3. **After Chat**: Full profile
@@ -561,4 +634,5 @@ if (user1.visible_fields.occupation && user2.visible_fields.occupation) {
 
 ---
 
-**Remember: Focus on helping busy adults find 2-3 quality connections per event, not 20 superficial ones.**
+**Remember: Focus on helping busy adults find 2-3 quality connections per event, not 20 superficial
+ones.**

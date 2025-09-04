@@ -11,7 +11,10 @@ export default function PWAUpdatePrompt() {
           const newWorker = registration.installing
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              if (
+                newWorker.state === 'installed' &&
+                navigator.serviceWorker.controller
+              ) {
                 // New service worker available, show update prompt
                 if (confirm('New version available! Click OK to update.')) {
                   newWorker.postMessage({ type: 'SKIP_WAITING' })

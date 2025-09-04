@@ -4,28 +4,28 @@
  */
 
 export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
+  success: boolean
+  data?: T
   error?: {
-    code: string;
-    message: string;
-    details?: any;
-  };
+    code: string
+    message: string
+    details?: any
+  }
   meta?: {
-    timestamp: string;
-    requestId?: string;
-  };
+    timestamp: string
+    requestId?: string
+  }
 }
 
 export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
   pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
-  };
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNext: boolean
+    hasPrevious: boolean
+  }
 }
 
 /**
@@ -37,19 +37,19 @@ export function success<T>(data: T, meta?: { requestId?: string }): Response {
     data,
     meta: {
       timestamp: new Date().toISOString(),
-      ...meta
-    }
-  };
+      ...meta,
+    },
+  }
 
-  return Response.json(response, { status: 200 });
+  return Response.json(response, { status: 200 })
 }
 
 /**
  * Format error API response
  */
 export function error(
-  code: string, 
-  message: string, 
+  code: string,
+  message: string,
   status: number = 400,
   details?: any,
   headers?: Record<string, string>
@@ -59,20 +59,20 @@ export function error(
     error: {
       code,
       message,
-      ...(details && { details })
+      ...(details && { details }),
     },
     meta: {
-      timestamp: new Date().toISOString()
-    }
-  };
+      timestamp: new Date().toISOString(),
+    },
+  }
 
-  return Response.json(response, { 
+  return Response.json(response, {
     status,
     headers: {
       'Content-Type': 'application/json',
-      ...headers
-    }
-  });
+      ...headers,
+    },
+  })
 }
 
 /**
@@ -85,8 +85,8 @@ export function paginated<T>(
   total: number,
   meta?: { requestId?: string }
 ): Response {
-  const totalPages = Math.ceil(total / limit);
-  
+  const totalPages = Math.ceil(total / limit)
+
   const response: PaginatedResponse<T> = {
     success: true,
     data,
@@ -96,15 +96,15 @@ export function paginated<T>(
       total,
       totalPages,
       hasNext: page < totalPages,
-      hasPrevious: page > 1
+      hasPrevious: page > 1,
     },
     meta: {
       timestamp: new Date().toISOString(),
-      ...meta
-    }
-  };
+      ...meta,
+    },
+  }
 
-  return Response.json(response, { status: 200 });
+  return Response.json(response, { status: 200 })
 }
 
 /**
@@ -116,16 +116,16 @@ export function created<T>(data: T, meta?: { requestId?: string }): Response {
     data,
     meta: {
       timestamp: new Date().toISOString(),
-      ...meta
-    }
-  };
+      ...meta,
+    },
+  }
 
-  return Response.json(response, { status: 201 });
+  return Response.json(response, { status: 201 })
 }
 
 /**
  * Format no content response
  */
 export function noContent(): Response {
-  return new Response(null, { status: 204 });
+  return new Response(null, { status: 204 })
 }

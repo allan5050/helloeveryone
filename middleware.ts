@@ -15,7 +15,9 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -36,8 +38,15 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Protected routes - require authentication
-  const protectedPaths = ['/dashboard', '/profile', '/matches', '/events', '/chat', '/calendar']
-  const isProtectedPath = protectedPaths.some(path => 
+  const protectedPaths = [
+    '/dashboard',
+    '/profile',
+    '/matches',
+    '/events',
+    '/chat',
+    '/calendar',
+  ]
+  const isProtectedPath = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   )
 

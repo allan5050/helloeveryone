@@ -1,17 +1,19 @@
 # HelloEveryone.fun 🤝
 
-> **Smart social matching for meaningful connections** - Helping busy adults (25-50) find real friends through intelligent matching at local events.
+> **Smart social matching for meaningful connections** - Helping busy adults (25-50) find real
+> friends through intelligent matching at local events.
 
 🌐 **Live at**: [https://helloeveryone.vercel.app](https://helloeveryone.vercel.app)
 
 ## 🎯 Problem We Solve
 
-Adults waste precious time at social events talking to random people with whom they have nothing in common. We solve this by showing you **exactly who to meet** based on compatibility scores.
+Adults waste precious time at social events talking to random people with whom they have nothing in
+common. We solve this by showing you **exactly who to meet** based on compatibility scores.
 
 ## ✨ Key Features
 
 - **Smart Matching**: See compatibility scores (65-95%) with other attendees
-- **"People to Meet"**: Top 3-5 matches highlighted at each event  
+- **"People to Meet"**: Top 3-5 matches highlighted at each event
 - **Privacy-First**: Mutual visibility - you can't search what you don't share
 - **Universal Calendar**: Download events to any calendar app
 - **Mobile-Ready**: Progressive Web App works on all devices
@@ -57,7 +59,7 @@ helloeveryone/
 ├── components/            # React components
 ├── lib/                   # Core business logic
 │   └── api/auth.ts        # Server auth helpers
-├── hooks/                 # Custom React hooks  
+├── hooks/                 # Custom React hooks
 ├── types/                 # TypeScript definitions
 ├── public/               # Static assets + PWA manifest
 ├── supabase/             # Database migrations
@@ -78,8 +80,9 @@ helloeveryone/
 ## 📊 Matching Algorithm
 
 Our matching engine considers:
+
 - **40%** - Common interests (music, food, activities)
-- **30%** - Bio semantic similarity 
+- **30%** - Bio semantic similarity
 - **20%** - Age proximity (±5 years optimal)
 - **10%** - Location and availability
 
@@ -103,7 +106,7 @@ Match scores range from 0-100%, with 70%+ indicating high compatibility.
 
 ```bash
 npm run test              # Jest unit tests
-npm run test:integration  # API integration tests  
+npm run test:integration  # API integration tests
 npm run test:e2e         # Playwright E2E tests
 npm run test:load        # K6 load testing
 ```
@@ -120,7 +123,8 @@ npm run test:load        # K6 load testing
 
 ## 🤝 Contributing
 
-This is currently a private project. See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) for development guidelines.
+This is currently a private project. See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) for
+development guidelines.
 
 ## 📄 License
 

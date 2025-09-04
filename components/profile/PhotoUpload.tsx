@@ -11,7 +11,11 @@ interface PhotoUploadProps {
   className?: string
 }
 
-export function PhotoUpload({ currentPhotoUrl, onPhotoChange, className = '' }: PhotoUploadProps) {
+export function PhotoUpload({
+  currentPhotoUrl,
+  onPhotoChange,
+  className = '',
+}: PhotoUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -36,7 +40,7 @@ export function PhotoUpload({ currentPhotoUrl, onPhotoChange, className = '' }: 
 
     // Create preview
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = e => {
       setPreviewUrl(e.target?.result as string)
     }
     reader.readAsDataURL(file)
@@ -114,32 +118,40 @@ export function PhotoUpload({ currentPhotoUrl, onPhotoChange, className = '' }: 
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <label className="text-lg font-medium text-gray-900">
-        Profile Photo
-      </label>
-      
+      <label className="text-lg font-medium text-gray-900">Profile Photo</label>
+
       <div className="flex flex-col items-center space-y-4">
         {/* Photo Display */}
-        <div className="relative w-32 h-32 sm:w-40 sm:h-40">
+        <div className="relative h-32 w-32 sm:h-40 sm:w-40">
           {displayUrl ? (
-            <div className="relative w-full h-full">
+            <div className="relative h-full w-full">
               <Image
                 src={displayUrl}
                 alt="Profile photo"
                 fill
-                className="object-cover rounded-full border-4 border-gray-200"
+                className="rounded-full border-4 border-gray-200 object-cover"
               />
               {isUploading && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50">
+                  <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-white"></div>
                 </div>
               )}
             </div>
           ) : (
-            <div className="w-full h-full rounded-full border-4 border-gray-300 border-dashed flex items-center justify-center bg-gray-50">
+            <div className="flex h-full w-full items-center justify-center rounded-full border-4 border-dashed border-gray-300 bg-gray-50">
               <div className="text-center">
-                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <svg
+                  className="mx-auto mb-2 h-8 w-8 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
                 </svg>
                 <span className="text-sm text-gray-500">Add Photo</span>
               </div>
@@ -153,17 +165,17 @@ export function PhotoUpload({ currentPhotoUrl, onPhotoChange, className = '' }: 
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
+            className="min-h-[44px] rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {currentPhotoUrl ? 'Change Photo' : 'Upload Photo'}
           </button>
-          
+
           {currentPhotoUrl && (
             <button
               type="button"
               onClick={removePhoto}
               disabled={isUploading}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[44px]"
+              className="min-h-[44px] rounded-lg border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Remove
             </button>
@@ -178,10 +190,10 @@ export function PhotoUpload({ currentPhotoUrl, onPhotoChange, className = '' }: 
           className="hidden"
           disabled={isUploading}
         />
-        
-        <p className="text-xs text-gray-500 text-center max-w-xs">
-          Upload a clear photo of yourself. Max file size: 5MB. 
-          Supported formats: JPG, PNG, WebP
+
+        <p className="max-w-xs text-center text-xs text-gray-500">
+          Upload a clear photo of yourself. Max file size: 5MB. Supported
+          formats: JPG, PNG, WebP
         </p>
       </div>
     </div>

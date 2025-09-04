@@ -1,16 +1,20 @@
 # HelloEveryone.fun - Enhanced Implementation Plan
+
 ## Smart Social Matching Platform for Real Connections
 
 ---
 
 ## 🎯 **Core Mission**
-Help busy 25-50 year olds find **relevant** friends through smart matching at local events, emphasizing quality connections over quantity.
+
+Help busy 25-50 year olds find **relevant** friends through smart matching at local events,
+emphasizing quality connections over quantity.
 
 ---
 
 ## 🏗️ **Tech Stack (Pragmatic Choices)**
 
 ### Core Infrastructure
+
 - **Frontend**: Next.js 14+ (App Router) - PWA enabled for mobile
 - **Database**: Supabase (PostgreSQL + Auth + Realtime + Storage + Vector embeddings)
 - **Matching Engine**: PostgreSQL with pgvector for semantic search
@@ -21,6 +25,7 @@ Help busy 25-50 year olds find **relevant** friends through smart matching at lo
 - **Search**: Supabase full-text search + pgvector for semantic matching
 
 ### Why This Stack?
+
 - **Supabase pgvector**: Built-in semantic similarity without external services
 - **PWA over native**: One codebase, works everywhere
 - **ICS files**: Universal calendar format, no API integrations needed
@@ -43,13 +48,13 @@ CREATE TABLE profiles (
   photo_url TEXT,
   bio TEXT, -- free text for semantic matching
   bio_embedding vector(1536), -- OpenAI embeddings for semantic search
-  
+
   -- Privacy settings (field-level visibility)
   visible_fields JSONB DEFAULT '{"first_name": true, "photo": true}'::jsonb,
-  
+
   -- Structured interests for exact matching
   interests JSONB DEFAULT '{}'::jsonb, -- {music: ["rock", "jazz"], food: ["italian", "thai"]}
-  
+
   city TEXT DEFAULT 'Current City',
   created_at TIMESTAMP DEFAULT NOW(),
   last_active TIMESTAMP DEFAULT NOW()
@@ -131,35 +136,44 @@ CREATE TABLE match_scores (
 
 ## 🎨 **Priority Features (MVP to Full Product)**
 
-### **Phase 1: Core Platform** 
+### **Phase 1: Core Platform**
+
 ✅ **Must Have**
+
 - User registration with email verification
 - Basic profile (name, age, photo, 3 interests)
 - Event listing and RSVP
 - Simple profile privacy (show/hide photo)
 
-### **Phase 2: Smart Matching** 
+### **Phase 2: Smart Matching**
+
 ✅ **High Value**
+
 - Semantic bio matching using pgvector
 - Interest-based matching (exact + fuzzy)
 - "People to Meet" suggestions at events
 - Match score visualization
 
-### **Phase 3: Connection Tools** 
+### **Phase 3: Connection Tools**
+
 ✅ **Medium Value**
+
 - Profile favorites/bookmarks
 - Simple 1-on-1 async chat
 - Calendar download (.ics files)
 - Block/report functionality
 
-### **Phase 4: Enhanced Experience** 
+### **Phase 4: Enhanced Experience**
+
 🔄 **Nice to Have**
+
 - 15-minute meeting scheduler
 - Event suggestions based on favorites attending
 - Past events archive
 - GDPR compliance tools
 
 ### **Descoped Features** ❌
+
 - Discussion boards (use Discord)
 - Payment processing
 - Native mobile apps
@@ -167,6 +181,7 @@ CREATE TABLE match_scores (
 - AI chat matching (future enhancement)
 
 ---
+
 ---
 
 ## 📁 **Project Structure (Simple Monolith)**
@@ -209,12 +224,14 @@ helloeveryone/
 ## 🎯 **Success Metrics**
 
 ### **Technical KPIs**
+
 - Match computation: < 100ms
 - Page load: < 2s on 3G
 - PWA score: > 90
 - Test coverage: > 80%
 
 ### **User KPIs**
+
 - Event → Connection rate: > 30%
 - Match accuracy satisfaction: > 70%
 - Return user rate: > 40%
@@ -225,6 +242,7 @@ helloeveryone/
 ## 💡 **Architecture Decisions**
 
 ### **Why These Choices**
+
 1. **pgvector over Pinecone**: Free, integrated with Supabase
 2. **ICS files over Calendar APIs**: No OAuth complexity
 3. **PWA over React Native**: Single codebase, easier updates
@@ -232,6 +250,7 @@ helloeveryone/
 5. **Discord for groups**: Offload community management
 
 ### **What We're NOT Building**
+
 - ❌ Video chat (use Discord)
 - ❌ AI conversation starters (future)
 - ❌ Personality quizzes (keep it simple)
@@ -243,19 +262,21 @@ helloeveryone/
 ## 🔐 **Privacy-First Design**
 
 ### **Mutual Visibility Rules**
+
 ```typescript
 // If user hides age, they can't filter by age
 if (!profile.visible_fields.age) {
-  disableAgeFiltering();
+  disableAgeFiltering()
 }
 
 // Matches only shown if both users share the field
 if (user1.visible_fields.occupation && user2.visible_fields.occupation) {
-  showOccupationMatch();
+  showOccupationMatch()
 }
 ```
 
 ### **Progressive Disclosure**
+
 1. **Public**: First name, photo (optional)
 2. **After RSVP**: Interests, bio preview
 3. **After Chat**: Full profile
@@ -278,4 +299,5 @@ if (user1.visible_fields.occupation && user2.visible_fields.occupation) {
 
 ---
 
-**Remember: Focus on helping busy adults find 2-3 quality connections per event, not 20 superficial ones.**
+**Remember: Focus on helping busy adults find 2-3 quality connections per event, not 20 superficial
+ones.**

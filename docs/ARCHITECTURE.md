@@ -3,12 +3,14 @@
 ## Security & Code Visibility
 
 ### Server-Side (HIDDEN from users)
+
 - `/app/api/*` routes - All matching logic here
-- Database functions - Complex queries in PostgreSQL  
+- Database functions - Complex queries in PostgreSQL
 - Server Components - Data fetching, no `'use client'`
 - Environment variables (without `NEXT_PUBLIC_` prefix)
 
 ### Client-Side (Visible to users)
+
 - UI components with `'use client'` directive
 - Basic form validation
 - UI state management
@@ -24,6 +26,7 @@
 ## Tech Stack Details
 
 ### Backend (Server-Side TypeScript)
+
 ```typescript
 // app/api/match/route.ts - THIS IS HIDDEN FROM USERS
 export async function POST(request: Request) {
@@ -35,6 +38,7 @@ export async function POST(request: Request) {
 ```
 
 ### Database Layer
+
 ```sql
 -- Supabase PostgreSQL functions - COMPLETELY HIDDEN
 CREATE OR REPLACE FUNCTION calculate_match_score(user1_id UUID, user2_id UUID)
@@ -45,9 +49,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
 ### Frontend (Client-Side React)
+
 ```typescript
 // components/MatchCard.tsx - Users CAN see this
-'use client'  // This directive makes it client-side
+'use client' // This directive makes it client-side
 export function MatchCard({ matchPercentage }) {
   // Only UI logic here, no secrets
 }
@@ -60,7 +65,7 @@ helloeveryone/
 ├── app/
 │   ├── (public)/              # Public routes
 │   │   ├── page.tsx           # Landing (Server Component)
-│   │   └── login/page.tsx     
+│   │   └── login/page.tsx
 │   ├── (protected)/           # Auth required
 │   │   ├── dashboard/page.tsx # Server Component by default
 │   │   ├── events/
@@ -143,15 +148,17 @@ import { generateEmbedding } from '@/lib/openai/server'
 export async function POST(request: Request) {
   // 1. Authenticate user
   const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   // 2. Get user profile and preferences
   // 3. Generate embeddings (server-side only)
   // 4. Call PostgreSQL matching function
   // 5. Return sanitized results
-  
-  return Response.json({ 
-    matches: sanitizedMatches // Only safe data
+
+  return Response.json({
+    matches: sanitizedMatches, // Only safe data
   })
 }
 ```
@@ -168,7 +175,7 @@ CREATE POLICY "mutual_visibility" ON profiles
 
 -- Matching function (runs server-side only)
 CREATE FUNCTION calculate_match_score(
-  user1_id UUID, 
+  user1_id UUID,
   user2_id UUID
 ) RETURNS TABLE (
   score FLOAT,
@@ -185,17 +192,19 @@ $$ LANGUAGE plpgsql;
 ## Client-Server Boundary
 
 ### Server Components (Default - Hidden Logic)
+
 ```typescript
 // app/events/[id]/page.tsx
 async function EventPage({ params }) {
   // This runs on server, hidden from users
   const matches = await calculateMatches(params.id)
-  
+
   return <EventDetail matches={matches} />
 }
 ```
 
 ### Client Components (Visible - UI Only)
+
 ```typescript
 // components/features/MatchCard.tsx
 'use client' // Makes this client-side
@@ -210,15 +219,17 @@ export function MatchCard({ match }) {
 ## Performance Architecture
 
 ### Caching Strategy
+
 1. **Match Scores**: PostgreSQL materialized view (1hr refresh)
 2. **Embeddings**: Cached in database permanently
 3. **API Responses**: Vercel Edge Cache (5 min)
 4. **Static Pages**: ISR (Incremental Static Regeneration)
 
 ### Database Indexes
+
 ```sql
 -- Critical indexes for performance
-CREATE INDEX idx_profiles_embedding ON profiles 
+CREATE INDEX idx_profiles_embedding ON profiles
   USING ivfflat (bio_embedding vector_cosine_ops);
 CREATE INDEX idx_events_date ON events(event_date);
 CREATE INDEX idx_match_scores ON match_scores(user1_id, user2_id);
@@ -227,12 +238,14 @@ CREATE INDEX idx_match_scores ON match_scores(user1_id, user2_id);
 ## PWA Architecture
 
 ### Service Worker Strategy
+
 - Cache-first for assets
 - Network-first for API calls
 - Background sync for messages
 - Push notifications for event reminders
 
 ### Offline Capabilities
+
 - Browse cached events
 - View saved matches
 - Queue messages for sending

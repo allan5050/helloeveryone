@@ -1,32 +1,32 @@
-import { supabase } from '@/lib/supabase/client';
+import { supabase } from '@/lib/supabase/client'
 
-export type ConsentType = 
+export type ConsentType =
   | 'privacy_policy'
-  | 'terms_of_service' 
+  | 'terms_of_service'
   | 'marketing_emails'
   | 'data_processing'
   | 'cookie_consent'
   | 'location_sharing'
-  | 'profile_visibility';
+  | 'profile_visibility'
 
 export interface ConsentRecord {
-  id: string;
-  user_id: string;
-  consent_type: ConsentType;
-  consent_given: boolean;
-  consent_version: string;
-  ip_address: string | null;
-  user_agent: string | null;
-  created_at: string;
-  updated_at: string;
+  id: string
+  user_id: string
+  consent_type: ConsentType
+  consent_given: boolean
+  consent_version: string
+  ip_address: string | null
+  user_agent: string | null
+  created_at: string
+  updated_at: string
 }
 
 export interface ConsentRequest {
-  consent_type: ConsentType;
-  consent_given: boolean;
-  consent_version: string;
-  ip_address?: string;
-  user_agent?: string;
+  consent_type: ConsentType
+  consent_given: boolean
+  consent_version: string
+  ip_address?: string
+  user_agent?: string
 }
 
 /**
@@ -44,7 +44,7 @@ export async function recordConsent(
       .eq('user_id', userId)
       .eq('consent_type', consentRequest.consent_type)
       .eq('consent_version', consentRequest.consent_version)
-      .single();
+      .single()
 
     if (existing) {
       // Update existing consent
@@ -56,27 +56,25 @@ export async function recordConsent(
           user_agent: consentRequest.user_agent,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', existing.id);
+        .eq('id', existing.id)
 
-      return !error;
+      return !error
     } else {
       // Create new consent record
-      const { error } = await supabase
-        .from('user_consents')
-        .insert({
-          user_id: userId,
-          consent_type: consentRequest.consent_type,
-          consent_given: consentRequest.consent_given,
-          consent_version: consentRequest.consent_version,
-          ip_address: consentRequest.ip_address,
-          user_agent: consentRequest.user_agent,
-        });
+      const { error } = await supabase.from('user_consents').insert({
+        user_id: userId,
+        consent_type: consentRequest.consent_type,
+        consent_given: consentRequest.consent_given,
+        consent_version: consentRequest.consent_version,
+        ip_address: consentRequest.ip_address,
+        user_agent: consentRequest.user_agent,
+      })
 
-      return !error;
+      return !error
     }
   } catch (error) {
-    console.error('Error recording consent:', error);
-    return false;
+    console.error('Error recording consent:', error)
+    return false
   }
 }
 
@@ -91,20 +89,20 @@ export async function getUserConsent(
     .from('user_consents')
     .select('*')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
 
   if (consentType) {
-    query = query.eq('consent_type', consentType);
+    query = query.eq('consent_type', consentType)
   }
 
-  const { data, error } = await query;
+  const { data, error } = await query
 
   if (error) {
-    console.error('Error fetching consent:', error);
-    return [];
+    console.error('Error fetching consent:', error)
+    return []
   }
 
-  return data || [];
+  return data || []
 }
 
 /**
@@ -121,24 +119,24 @@ export async function hasValidConsent(
       .select('consent_given, consent_version')
       .eq('user_id', userId)
       .eq('consent_type', consentType)
-      .eq('consent_given', true);
+      .eq('consent_given', true)
 
     if (requiredVersion) {
-      query = query.eq('consent_version', requiredVersion);
+      query = query.eq('consent_version', requiredVersion)
     }
 
-    query = query.order('created_at', { ascending: false }).limit(1);
+    query = query.order('created_at', { ascending: false }).limit(1)
 
-    const { data, error } = await query.single();
+    const { data, error } = await query.single()
 
     if (error || !data) {
-      return false;
+      return false
     }
 
-    return data.consent_given === true;
+    return data.consent_given === true
   } catch (error) {
-    console.error('Error checking consent:', error);
-    return false;
+    console.error('Error checking consent:', error)
+    return false
   }
 }
 
@@ -152,21 +150,19 @@ export async function withdrawConsent(
   metadata?: { ip_address?: string; user_agent?: string }
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('user_consents')
-      .insert({
-        user_id: userId,
-        consent_type: consentType,
-        consent_given: false,
-        consent_version: version,
-        ip_address: metadata?.ip_address,
-        user_agent: metadata?.user_agent,
-      });
+    const { error } = await supabase.from('user_consents').insert({
+      user_id: userId,
+      consent_type: consentType,
+      consent_given: false,
+      consent_version: version,
+      ip_address: metadata?.ip_address,
+      user_agent: metadata?.user_agent,
+    })
 
-    return !error;
+    return !error
   } catch (error) {
-    console.error('Error withdrawing consent:', error);
-    return false;
+    console.error('Error withdrawing consent:', error)
+    return false
   }
 }
 
@@ -174,17 +170,18 @@ export async function withdrawConsent(
  * Get all consent types that require user agreement
  */
 export function getRequiredConsentTypes(): {
-  type: ConsentType;
-  name: string;
-  description: string;
-  required: boolean;
-  currentVersion: string;
+  type: ConsentType
+  name: string
+  description: string
+  required: boolean
+  currentVersion: string
 }[] {
   return [
     {
       type: 'privacy_policy',
       name: 'Privacy Policy',
-      description: 'Agreement to our privacy policy and data handling practices',
+      description:
+        'Agreement to our privacy policy and data handling practices',
       required: true,
       currentVersion: '2024-01-01',
     },
@@ -198,7 +195,8 @@ export function getRequiredConsentTypes(): {
     {
       type: 'data_processing',
       name: 'Data Processing',
-      description: 'Consent for processing personal data for matching and platform features',
+      description:
+        'Consent for processing personal data for matching and platform features',
       required: true,
       currentVersion: '2024-01-01',
     },
@@ -230,29 +228,31 @@ export function getRequiredConsentTypes(): {
       required: true,
       currentVersion: '2024-01-01',
     },
-  ];
+  ]
 }
 
 /**
  * Check if user needs to update any consents due to version changes
  */
-export async function checkConsentUpdatesNeeded(userId: string): Promise<{
-  type: ConsentType;
-  name: string;
-  currentVersion: string;
-  userVersion: string | null;
-  updateRequired: boolean;
-}[]> {
-  const requiredConsents = getRequiredConsentTypes();
-  const userConsents = await getUserConsent(userId);
+export async function checkConsentUpdatesNeeded(userId: string): Promise<
+  {
+    type: ConsentType
+    name: string
+    currentVersion: string
+    userVersion: string | null
+    updateRequired: boolean
+  }[]
+> {
+  const requiredConsents = getRequiredConsentTypes()
+  const userConsents = await getUserConsent(userId)
 
   return requiredConsents.map(required => {
     const userConsent = userConsents.find(
       uc => uc.consent_type === required.type && uc.consent_given
-    );
+    )
 
-    const updateRequired = !userConsent || 
-      userConsent.consent_version !== required.currentVersion;
+    const updateRequired =
+      !userConsent || userConsent.consent_version !== required.currentVersion
 
     return {
       type: required.type,
@@ -260,8 +260,8 @@ export async function checkConsentUpdatesNeeded(userId: string): Promise<{
       currentVersion: required.currentVersion,
       userVersion: userConsent?.consent_version || null,
       updateRequired,
-    };
-  });
+    }
+  })
 }
 
 /**
@@ -279,16 +279,16 @@ export async function recordMultipleConsents(
       consent_version: consent.consent_version,
       ip_address: consent.ip_address,
       user_agent: consent.user_agent,
-    }));
+    }))
 
     const { error } = await supabase
       .from('user_consents')
-      .insert(consentRecords);
+      .insert(consentRecords)
 
-    return !error;
+    return !error
   } catch (error) {
-    console.error('Error recording multiple consents:', error);
-    return false;
+    console.error('Error recording multiple consents:', error)
+    return false
   }
 }
 
@@ -303,18 +303,18 @@ export async function getConsentHistory(
     .from('user_consents')
     .select('*')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
 
   if (consentType) {
-    query = query.eq('consent_type', consentType);
+    query = query.eq('consent_type', consentType)
   }
 
-  const { data, error } = await query;
+  const { data, error } = await query
 
   if (error) {
-    console.error('Error fetching consent history:', error);
-    return [];
+    console.error('Error fetching consent history:', error)
+    return []
   }
 
-  return data || [];
+  return data || []
 }

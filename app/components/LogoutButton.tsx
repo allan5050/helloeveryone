@@ -8,7 +8,10 @@ interface LogoutButtonProps {
   children?: React.ReactNode
 }
 
-export default function LogoutButton({ className = '', children = 'Sign out' }: LogoutButtonProps) {
+export default function LogoutButton({
+  className = '',
+  children = 'Sign out',
+}: LogoutButtonProps) {
   const { signOut } = useAuth()
   const router = useRouter()
 
@@ -18,10 +21,7 @@ export default function LogoutButton({ className = '', children = 'Sign out' }: 
   }
 
   return (
-    <button
-      onClick={handleSignOut}
-      className={className}
-    >
+    <button onClick={handleSignOut} className={className}>
       {children}
     </button>
   )

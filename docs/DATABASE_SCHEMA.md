@@ -15,18 +15,19 @@ CREATE EXTENSION IF NOT EXISTS "btree_gin"; -- For composite indexes
 ### 2. Core Tables
 
 #### Profiles Table
+
 ```sql
 CREATE TABLE profiles (
   -- Identity
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   first_name TEXT NOT NULL,
   age INTEGER CHECK (age >= 18 AND age <= 100),
-  
+
   -- Profile content
   bio TEXT CHECK (LENGTH(bio) <= 500),
   bio_embedding vector(1536), -- OpenAI text-embedding-3-small
   photo_url TEXT,
-  
+
   -- Structured data for matching
   interests JSONB DEFAULT '{}' CHECK (jsonb_typeof(interests) = 'object'),
   /* Example interests structure:
@@ -41,7 +42,7 @@ CREATE TABLE profiles (
     "looking_for": ["friends", "activity-partners"]
   }
   */
-  
+
   -- Privacy controls
   visible_fields JSONB DEFAULT '{
     "age": true,
@@ -50,13 +51,13 @@ CREATE TABLE profiles (
     "interests": true,
     "profession": true
   }'::jsonb,
-  
+
   -- Metadata
   city TEXT DEFAULT 'Helsinki',
   joined_at TIMESTAMP DEFAULT NOW(),
   last_active TIMESTAMP DEFAULT NOW(),
   is_active BOOLEAN DEFAULT true,
-  
+
   -- Indexes
   CONSTRAINT valid_age CHECK (age IS NULL OR (age >= 18 AND age <= 100))
 );
@@ -69,37 +70,38 @@ CREATE INDEX idx_profiles_last_active ON profiles(last_active DESC);
 ```
 
 #### Events Table
+
 ```sql
 CREATE TABLE events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
+
   -- Event details
   title TEXT NOT NULL CHECK (LENGTH(title) <= 100),
   description TEXT CHECK (LENGTH(description) <= 1000),
-  
+
   -- Location (public venues only)
   venue_name TEXT NOT NULL,
   venue_address TEXT NOT NULL,
   venue_url TEXT, -- Google Maps or venue website
-  
+
   -- Timing
   event_date TIMESTAMP NOT NULL CHECK (event_date > NOW()),
   duration_hours DECIMAL(3,1) DEFAULT 2.0,
-  
+
   -- Capacity
   min_attendees INTEGER DEFAULT 4,
   max_attendees INTEGER DEFAULT 15,
-  
+
   -- Meta
   created_by UUID REFERENCES profiles(id),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
   is_cancelled BOOLEAN DEFAULT false,
   cancellation_reason TEXT,
-  
+
   -- Event tags for filtering
   tags TEXT[] DEFAULT '{}',
-  
+
   CONSTRAINT valid_capacity CHECK (min_attendees < max_attendees),
   CONSTRAINT future_event CHECK (event_date > NOW())
 );
@@ -110,19 +112,20 @@ CREATE INDEX idx_events_tags ON events USING gin(tags);
 ```
 
 #### RSVPs Table
+
 ```sql
 CREATE TABLE rsvps (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  
-  status TEXT NOT NULL DEFAULT 'going' 
+
+  status TEXT NOT NULL DEFAULT 'going'
     CHECK (status IN ('going', 'interested', 'cancelled')),
-  
+
   -- Track when they decided
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
-  
+
   -- Unique constraint
   UNIQUE(event_id, user_id)
 );
@@ -133,15 +136,16 @@ CREATE INDEX idx_rsvps_user ON rsvps(user_id) WHERE status = 'going';
 ```
 
 #### Match Scores Table (Cached)
+
 ```sql
 CREATE TABLE match_scores (
   -- Composite primary key
   user1_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   user2_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  
+
   -- Match data
   total_score DECIMAL(5,2) CHECK (total_score >= 0 AND total_score <= 100),
-  
+
   -- Score breakdown
   score_components JSONB DEFAULT '{}',
   /* Example:
@@ -152,7 +156,7 @@ CREATE TABLE match_scores (
     "activity_bonus": 5.0
   }
   */
-  
+
   -- Explanation for users
   match_reasons JSONB DEFAULT '[]',
   /* Example:
@@ -162,11 +166,11 @@ CREATE TABLE match_scores (
     {"type": "age", "text": "Similar age range"}
   ]
   */
-  
+
   -- Metadata
   computed_at TIMESTAMP DEFAULT NOW(),
   algorithm_version TEXT DEFAULT 'v1',
-  
+
   -- Ensure user1_id < user2_id for consistency
   PRIMARY KEY (user1_id, user2_id),
   CONSTRAINT ordered_users CHECK (user1_id < user2_id)
@@ -174,57 +178,59 @@ CREATE TABLE match_scores (
 
 -- Index for fast lookups
 CREATE INDEX idx_match_scores_user ON match_scores(user1_id, total_score DESC);
-CREATE INDEX idx_match_scores_high ON match_scores(total_score DESC) 
+CREATE INDEX idx_match_scores_high ON match_scores(total_score DESC)
   WHERE total_score > 70;
 ```
 
 #### Messages Table
+
 ```sql
 CREATE TABLE messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
+
   -- Participants
   sender_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   recipient_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  
+
   -- Content
   content TEXT NOT NULL CHECK (LENGTH(content) <= 1000),
-  
+
   -- Status
   is_read BOOLEAN DEFAULT false,
   is_deleted_by_sender BOOLEAN DEFAULT false,
   is_deleted_by_recipient BOOLEAN DEFAULT false,
-  
+
   -- Timestamps
   sent_at TIMESTAMP DEFAULT NOW(),
   read_at TIMESTAMP,
-  
+
   -- Thread management
   thread_id UUID DEFAULT gen_random_uuid(),
-  
+
   CONSTRAINT not_self_message CHECK (sender_id != recipient_id)
 );
 
 -- Indexes for chat queries
 CREATE INDEX idx_messages_thread ON messages(thread_id, sent_at DESC);
-CREATE INDEX idx_messages_recipient ON messages(recipient_id, is_read) 
+CREATE INDEX idx_messages_recipient ON messages(recipient_id, is_read)
   WHERE is_deleted_by_recipient = false;
 ```
 
 #### Favorites Table
+
 ```sql
 CREATE TABLE favorites (
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   favorited_user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  
+
   created_at TIMESTAMP DEFAULT NOW(),
-  
+
   -- Categories for organization
-  category TEXT DEFAULT 'general' 
+  category TEXT DEFAULT 'general'
     CHECK (category IN ('general', 'met', 'want_to_meet')),
-  
+
   notes TEXT, -- Private notes about this person
-  
+
   PRIMARY KEY (user_id, favorited_user_id),
   CONSTRAINT not_self_favorite CHECK (user_id != favorited_user_id)
 );
@@ -234,14 +240,15 @@ CREATE INDEX idx_favorites_user ON favorites(user_id);
 ```
 
 #### Blocks Table
+
 ```sql
 CREATE TABLE blocks (
   blocker_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   blocked_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  
+
   reason TEXT CHECK (reason IN ('spam', 'inappropriate', 'other')),
   created_at TIMESTAMP DEFAULT NOW(),
-  
+
   PRIMARY KEY (blocker_id, blocked_id)
 );
 
@@ -251,32 +258,33 @@ CREATE INDEX idx_blocks_blocked ON blocks(blocked_id);
 ```
 
 #### Meeting Slots Table
+
 ```sql
 CREATE TABLE meeting_slots (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
+
   -- Event context
   event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-  
+
   -- Participants
   requester_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   requestee_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  
+
   -- Time slot (15-min increments)
   slot_time TIMESTAMP NOT NULL,
-  
+
   -- Status
-  status TEXT DEFAULT 'pending' 
+  status TEXT DEFAULT 'pending'
     CHECK (status IN ('pending', 'confirmed', 'declined', 'completed')),
-  
+
   -- Messages
   request_message TEXT,
   response_message TEXT,
-  
+
   -- Timestamps
   requested_at TIMESTAMP DEFAULT NOW(),
   responded_at TIMESTAMP,
-  
+
   UNIQUE(event_id, slot_time, requester_id),
   UNIQUE(event_id, slot_time, requestee_id)
 );
@@ -289,6 +297,7 @@ CREATE INDEX idx_meeting_slots_user ON meeting_slots(requester_id, status);
 ### 3. Database Functions
 
 #### Calculate Match Score
+
 ```sql
 CREATE OR REPLACE FUNCTION calculate_match_score(
   p_user1_id UUID,
@@ -297,7 +306,7 @@ CREATE OR REPLACE FUNCTION calculate_match_score(
   score DECIMAL(5,2),
   components JSONB,
   reasons JSONB
-) 
+)
 SECURITY DEFINER
 SET search_path = public
 LANGUAGE plpgsql
@@ -312,17 +321,18 @@ DECLARE
 BEGIN
   -- This function contains proprietary matching logic
   -- Hidden from client-side code
-  
+
   -- Calculate each component
   -- Implementation details here...
-  
-  RETURN QUERY 
+
+  RETURN QUERY
   SELECT v_total_score, v_components, v_reasons;
 END;
 $$;
 ```
 
 #### Get Event Matches
+
 ```sql
 CREATE OR REPLACE FUNCTION get_event_matches(
   p_user_id UUID,
@@ -341,14 +351,14 @@ AS $$
 BEGIN
   RETURN QUERY
   WITH event_attendees AS (
-    SELECT user_id 
-    FROM rsvps 
-    WHERE event_id = p_event_id 
+    SELECT user_id
+    FROM rsvps
+    WHERE event_id = p_event_id
       AND status = 'going'
       AND user_id != p_user_id
   ),
   matches AS (
-    SELECT 
+    SELECT
       ea.user_id,
       COALESCE(
         ms.total_score,
@@ -359,11 +369,11 @@ BEGIN
         (calculate_match_score(p_user_id, ea.user_id)).reasons
       ) AS reasons
     FROM event_attendees ea
-    LEFT JOIN match_scores ms ON 
-      (ms.user1_id = LEAST(p_user_id, ea.user_id) AND 
+    LEFT JOIN match_scores ms ON
+      (ms.user1_id = LEAST(p_user_id, ea.user_id) AND
        ms.user2_id = GREATEST(p_user_id, ea.user_id))
   )
-  SELECT 
+  SELECT
     m.user_id,
     p.first_name,
     p.photo_url,
@@ -372,7 +382,7 @@ BEGIN
   FROM matches m
   JOIN profiles p ON p.id = m.user_id
   WHERE NOT EXISTS (
-    SELECT 1 FROM blocks 
+    SELECT 1 FROM blocks
     WHERE (blocker_id = p_user_id AND blocked_id = m.user_id)
        OR (blocker_id = m.user_id AND blocked_id = p_user_id)
   )
@@ -397,9 +407,9 @@ ALTER TABLE blocks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view non-blocked profiles"
   ON profiles FOR SELECT
   USING (
-    auth.uid() IS NOT NULL 
+    auth.uid() IS NOT NULL
     AND NOT EXISTS (
-      SELECT 1 FROM blocks 
+      SELECT 1 FROM blocks
       WHERE (blocker_id = auth.uid() AND blocked_id = id)
          OR (blocker_id = id AND blocked_id = auth.uid())
     )
@@ -409,7 +419,7 @@ CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE
   USING (auth.uid() = id);
 
--- Events policies  
+-- Events policies
 CREATE POLICY "Anyone can view active events"
   ON events FOR SELECT
   USING (NOT is_cancelled);
@@ -465,8 +475,8 @@ CREATE POLICY "Users can send messages to non-blocked users"
 CREATE OR REPLACE FUNCTION update_last_active()
 RETURNS TRIGGER AS $$
 BEGIN
-  UPDATE profiles 
-  SET last_active = NOW() 
+  UPDATE profiles
+  SET last_active = NOW()
   WHERE id = NEW.user_id;
   RETURN NEW;
 END;
@@ -482,12 +492,12 @@ CREATE OR REPLACE FUNCTION refresh_match_cache()
 RETURNS void AS $$
 BEGIN
   -- Clear old matches
-  DELETE FROM match_scores 
+  DELETE FROM match_scores
   WHERE computed_at < NOW() - INTERVAL '7 days';
-  
+
   -- Recompute for active users
   INSERT INTO match_scores (user1_id, user2_id, total_score, score_components, match_reasons)
-  SELECT 
+  SELECT
     LEAST(p1.id, p2.id),
     GREATEST(p1.id, p2.id),
     (calculate_match_score(p1.id, p2.id)).*
@@ -496,8 +506,8 @@ BEGIN
   WHERE p1.id < p2.id
     AND p1.last_active > NOW() - INTERVAL '30 days'
     AND p2.last_active > NOW() - INTERVAL '30 days'
-  ON CONFLICT (user1_id, user2_id) 
-  DO UPDATE SET 
+  ON CONFLICT (user1_id, user2_id)
+  DO UPDATE SET
     total_score = EXCLUDED.total_score,
     score_components = EXCLUDED.score_components,
     match_reasons = EXCLUDED.match_reasons,
@@ -518,13 +528,13 @@ CREATE INDEX idx_messages_conversation ON messages(
 );
 
 -- Partial indexes for active data
-CREATE INDEX idx_events_upcoming ON events(event_date) 
+CREATE INDEX idx_events_upcoming ON events(event_date)
   WHERE event_date > NOW() AND NOT is_cancelled;
 
-CREATE INDEX idx_profiles_active_with_bio ON profiles(id) 
+CREATE INDEX idx_profiles_active_with_bio ON profiles(id)
   WHERE is_active = true AND bio_embedding IS NOT NULL;
 
 -- Text search indexes
-CREATE INDEX idx_profiles_bio_search ON profiles 
+CREATE INDEX idx_profiles_bio_search ON profiles
   USING gin(to_tsvector('english', bio));
 ```

@@ -1,27 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/api/auth';
-import { supabase } from '@/lib/supabase/client';
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/api/auth'
+import { supabase } from '@/lib/supabase/client'
 
 interface UserDataExport {
-  profile: any;
-  events: any[];
-  rsvps: any[];
-  matches: any[];
-  favorites: any[];
-  messages: any[];
-  blocks: any[];
-  preferences: any;
+  profile: any
+  events: any[]
+  rsvps: any[]
+  matches: any[]
+  favorites: any[]
+  messages: any[]
+  blocks: any[]
+  preferences: any
   metadata: {
-    exportDate: string;
-    userId: string;
-    dataVersion: string;
-  };
+    exportDate: string
+    userId: string
+    dataVersion: string
+  }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const currentUser = await requireAuth();
-    const userId = currentUser.id;
+    const currentUser = await requireAuth()
+    const userId = currentUser.id
 
     // Collect all user data
     const userDataExport: UserDataExport = {
@@ -38,41 +38,42 @@ export async function GET(request: NextRequest) {
         userId,
         dataVersion: '1.0',
       },
-    };
+    }
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .single()
 
     if (profileError) {
-      console.error('Error fetching profile:', profileError);
+      console.error('Error fetching profile:', profileError)
       return NextResponse.json(
         { error: 'Failed to fetch profile data' },
         { status: 500 }
-      );
+      )
     }
 
-    userDataExport.profile = profile;
+    userDataExport.profile = profile
 
     // Get user's events (where they are the organizer)
     const { data: events, error: eventsError } = await supabase
       .from('events')
       .select('*')
-      .eq('organizer_id', userId);
+      .eq('organizer_id', userId)
 
     if (eventsError) {
-      console.error('Error fetching events:', eventsError);
+      console.error('Error fetching events:', eventsError)
     } else {
-      userDataExport.events = events || [];
+      userDataExport.events = events || []
     }
 
     // Get user's RSVPs
     const { data: rsvps, error: rsvpsError } = await supabase
       .from('rsvps')
-      .select(`
+      .select(
+        `
         *,
         events (
           id,
@@ -82,78 +83,87 @@ export async function GET(request: NextRequest) {
           location,
           organizer_id
         )
-      `)
-      .eq('user_id', userId);
+      `
+      )
+      .eq('user_id', userId)
 
     if (rsvpsError) {
-      console.error('Error fetching RSVPs:', rsvpsError);
+      console.error('Error fetching RSVPs:', rsvpsError)
     } else {
-      userDataExport.rsvps = rsvps || [];
+      userDataExport.rsvps = rsvps || []
     }
 
     // Get user's matches
     const { data: matches, error: matchesError } = await supabase
       .from('match_scores')
-      .select(`
+      .select(
+        `
         *,
         user1:profiles!match_scores_user1_id_fkey (id, display_name),
         user2:profiles!match_scores_user2_id_fkey (id, display_name)
-      `)
+      `
+      )
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
-      .order('score', { ascending: false });
+      .order('score', { ascending: false })
 
     if (matchesError) {
-      console.error('Error fetching matches:', matchesError);
+      console.error('Error fetching matches:', matchesError)
     } else {
-      userDataExport.matches = matches || [];
+      userDataExport.matches = matches || []
     }
 
     // Get user's favorites
     const { data: favorites, error: favoritesError } = await supabase
       .from('favorites')
-      .select(`
+      .select(
+        `
         *,
         target_user:profiles!favorites_target_user_id_fkey (id, display_name)
-      `)
-      .eq('user_id', userId);
+      `
+      )
+      .eq('user_id', userId)
 
     if (favoritesError) {
-      console.error('Error fetching favorites:', favoritesError);
+      console.error('Error fetching favorites:', favoritesError)
     } else {
-      userDataExport.favorites = favorites || [];
+      userDataExport.favorites = favorites || []
     }
 
     // Get user's messages (both sent and received)
     const { data: messages, error: messagesError } = await supabase
       .from('messages')
-      .select(`
+      .select(
+        `
         *,
         sender:profiles!messages_sender_id_fkey (id, display_name),
         recipient:profiles!messages_recipient_id_fkey (id, display_name)
-      `)
+      `
+      )
       .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
       .eq('is_deleted', false)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
 
     if (messagesError) {
-      console.error('Error fetching messages:', messagesError);
+      console.error('Error fetching messages:', messagesError)
     } else {
-      userDataExport.messages = messages || [];
+      userDataExport.messages = messages || []
     }
 
     // Get user's blocks
     const { data: blocks, error: blocksError } = await supabase
       .from('blocks')
-      .select(`
+      .select(
+        `
         *,
         blocked_user:profiles!blocks_blocked_id_fkey (id, display_name)
-      `)
-      .eq('blocker_id', userId);
+      `
+      )
+      .eq('blocker_id', userId)
 
     if (blocksError) {
-      console.error('Error fetching blocks:', blocksError);
+      console.error('Error fetching blocks:', blocksError)
     } else {
-      userDataExport.blocks = blocks || [];
+      userDataExport.blocks = blocks || []
     }
 
     // Get user preferences (if we have a separate preferences table)
@@ -162,41 +172,40 @@ export async function GET(request: NextRequest) {
       visibility_settings: profile.visibility_settings,
       notification_settings: profile.notification_settings || {},
       privacy_settings: profile.privacy_settings || {},
-    };
+    }
 
     // Set response headers for file download
-    const filename = `helloeveryone-data-export-${userId}-${new Date().toISOString().split('T')[0]}.json`;
-    
+    const filename = `helloeveryone-data-export-${userId}-${new Date().toISOString().split('T')[0]}.json`
+
     return new NextResponse(JSON.stringify(userDataExport, null, 2), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
         'Content-Disposition': `attachment; filename="${filename}"`,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        Pragma: 'no-cache',
+        Expires: '0',
       },
-    });
-
+    })
   } catch (error) {
-    console.error('Data export error:', error);
+    console.error('Data export error:', error)
     return NextResponse.json(
       { error: 'Failed to export user data' },
       { status: 500 }
-    );
+    )
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const currentUser = await requireAuth();
-    const { email } = await request.json();
+    const currentUser = await requireAuth()
+    const { email } = await request.json()
 
     if (!email) {
       return NextResponse.json(
         { error: 'Email address is required' },
         { status: 400 }
-      );
+      )
     }
 
     // In a production system, you would:
@@ -209,13 +218,12 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Data export has been initiated. You will receive an email at ${email} with a secure download link within the next few minutes.`,
       estimatedTime: '5-10 minutes',
-    });
-
+    })
   } catch (error) {
-    console.error('Data export request error:', error);
+    console.error('Data export request error:', error)
     return NextResponse.json(
       { error: 'Failed to initiate data export' },
       { status: 500 }
-    );
+    )
   }
 }
