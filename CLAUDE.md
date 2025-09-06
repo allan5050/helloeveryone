@@ -166,6 +166,71 @@ The `.claude/agents/` directory contains specialized agent configurations:
 - **Session Management**: Automatic via Supabase Auth with cookie-based sessions
 - **OAuth**: Google OAuth ready (requires Google Client ID configuration)
 
+## Database Access (MCP Tools)
+
+The `mcp/` folder contains Model Context Protocol tools for direct database access:
+
+```bash
+# Quick database context for LLMs
+node mcp/quick-start.js
+
+# Interactive query mode
+node mcp/query.js
+
+# Export complete schema
+node mcp/get-schema.js json      # Machine-readable JSON
+node mcp/get-schema.js markdown  # Human-readable documentation
+
+# Database inspection
+node mcp/inspect-db.js
+
+# Query shortcuts
+node mcp/query.js :tables        # List all tables
+node mcp/query.js :count profiles  # Get row count
+node mcp/query.js :sample events 3 # Sample data
+```
+
+**Key Files:**
+- `mcp/db-client.js` - Database connection and utility methods
+- `mcp/schema.json` - Auto-generated complete database schema
+- `mcp/README.md` - Full documentation for MCP tools
+
+Use these tools to autonomously query and understand the database without manual schema sharing.
+
+## Documentation
+
+The `docs/` folder contains comprehensive project documentation:
+
+**Architecture & Planning:**
+- `ARCHITECTURE.md` - System architecture and design patterns
+- `DATABASE_SCHEMA.md` - Complete database schema documentation
+- `database-schema.md` - Updated schema with pgvector support
+- `IMPLEMENTATION_PLAN.md` - Development roadmap
+
+**Features & Systems:**
+- `MATCHING_SYSTEM.md` - AI-powered matching algorithm details
+- `RSVP_SYSTEM.md` - Event RSVP functionality
+- `AUTHENTICATION.md` - Auth flow and session management
+- `PWA.md` - Progressive Web App implementation
+
+**Development:**
+- `API_ROUTES.md` - API endpoint documentation
+- `COMPONENTS.md` - React component hierarchy
+- `HOOKS.md` - Custom React hooks documentation
+- `TESTING.md` - Testing strategy and guidelines
+- `DEPLOYMENT.md` - Deployment process and configuration
+
+**Database:**
+- `DATABASE_SETUP.md` - Database initialization guide
+- `DATABASE_FIXES_SUMMARY.md` - Migration history
+- `rls-policies.md` - Row Level Security documentation
+
+**Reference:**
+- `INDEX.md` - Documentation index and navigation
+- `KNOWN_ISSUES.md` - Current issues and workarounds
+- `TESTING_CHECKLIST.md` - Pre-deployment testing checklist
+- `DEPLOYMENT_CHECKLIST.md` - Deployment verification steps
+
 ## Environment Variables
 
 Required in `.env.local` and Vercel:
@@ -173,4 +238,8 @@ Required in `.env.local` and Vercel:
 ```
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+DB_PASSWORD=your-database-password  # Required for MCP tools
+SUPABASE_SERVICE_ROLE_API_KEY=your-service-role-key  # For admin operations
 ```
+
+See `env.example` for complete environment variable documentation.

@@ -16,17 +16,16 @@ import MatchCard from '@/components/matching/MatchCard'
 
 interface Match {
   id: string
-  total_score: number
+  combined_score: number
   common_interests: string[]
   created_at: string
   profiles: {
     user_id: string
-    first_name: string
-    last_name: string
-    avatar_url: string
+    display_name: string
     bio: string
     age: number
     interests: string[]
+    location?: string
     is_favorite?: boolean
   }
 }
@@ -68,35 +67,34 @@ export default function MatchesPage() {
         .select(
           `
           id,
-          total_score,
+          combined_score,
           common_interests,
           created_at,
           profiles!match_scores_user_id_2_fkey(
             user_id,
-            first_name,
-            last_name,
-            avatar_url,
+            display_name,
             bio,
             age,
-            interests
+            interests,
+            location
           )
         `,
           { count: 'exact' }
         )
         .eq('user_id_1', user.id)
-        .gte('total_score', minScore)
+        .gte('combined_score', minScore / 100)
 
       // Apply sorting
       switch (sortBy) {
         case 'score':
-          query = query.order('total_score', { ascending: false })
+          query = query.order('combined_score', { ascending: false })
           break
         case 'date':
           query = query.order('created_at', { ascending: false })
           break
         case 'interests':
           // Sort by number of common interests (handled in client-side filtering)
-          query = query.order('total_score', { ascending: false })
+          query = query.order('combined_score', { ascending: false })
           break
       }
 
@@ -156,7 +154,7 @@ export default function MatchesPage() {
       const searchLower = searchTerm.toLowerCase()
       filtered = filtered.filter(
         match =>
-          match.profiles.first_name?.toLowerCase().includes(searchLower) ||
+          match.profiles.display_name?.toLowerCase().includes(searchLower) ||
           match.profiles.bio?.toLowerCase().includes(searchLower) ||
           match.common_interests.some(interest =>
             interest.toLowerCase().includes(searchLower)
@@ -372,7 +370,7 @@ export default function MatchesPage() {
                 <MatchCard
                   key={match.id}
                   profile={match.profiles}
-                  matchScore={match.total_score}
+                  matchScore={match.combined_score * 100}
                   sharedInterests={match.common_interests}
                   className={viewMode === 'list' ? 'w-full' : ''}
                 />

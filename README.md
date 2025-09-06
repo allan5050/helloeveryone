@@ -63,8 +63,12 @@ helloeveryone/
 ├── types/                 # TypeScript definitions
 ├── public/               # Static assets + PWA manifest
 ├── supabase/             # Database migrations
+├── mcp/                  # Database access tools for LLMs
+│   ├── db-client.js      # Database connection utilities
+│   ├── query.js          # Interactive query tool
+│   └── schema.json       # Auto-generated schema
 ├── tests/                # Test suites
-├── docs/                 # Architecture documentation
+├── docs/                 # Comprehensive documentation
 └── .claude/              # AI agent configurations
 ```
 
@@ -111,15 +115,46 @@ npm run test:e2e         # Playwright E2E tests
 npm run test:load        # K6 load testing
 ```
 
+## 🗄️ Database Tools (MCP)
+
+The `mcp/` folder contains powerful database introspection and query tools:
+
+```bash
+# Quick database overview
+node mcp/quick-start.js
+
+# Interactive query mode
+node mcp/query.js
+
+# Export schema documentation
+node mcp/get-schema.js json      # Machine-readable
+node mcp/get-schema.js markdown  # Human-readable
+
+# Common queries
+node mcp/query.js :tables        # List all tables
+node mcp/query.js :count users   # Get row count
+node mcp/query.js :sample events 5  # Sample data
+```
+
+These tools enable LLMs and developers to autonomously explore the database without manual schema sharing.
+
 ## 📝 Documentation
 
+**Core Documentation:**
 - [Implementation Plan](./IMPLEMENTATION_PLAN.md) - Technical architecture
 - [Deployment Guide](./DEPLOYMENT.md) - Vercel & Supabase setup
-- [API Documentation](./docs/API_ROUTES.md) - Endpoint reference
-- [Database Schema](./docs/DATABASE.md) - Table structures
-- [Matching Algorithm](./docs/MATCHING.md) - How matching works
-- [Component Guide](./docs/COMPONENTS.md) - UI component patterns
-- [Testing Guide](./docs/TESTING.md) - Test strategies
+- [CLAUDE.md](./CLAUDE.md) - AI/LLM development guide
+
+**In `docs/` folder:**
+- [Architecture](./docs/ARCHITECTURE.md) - System design patterns
+- [API Routes](./docs/API_ROUTES.md) - Endpoint reference
+- [Database Schema](./docs/DATABASE_SCHEMA.md) - Table structures
+- [Matching System](./docs/MATCHING_SYSTEM.md) - How matching works
+- [Components](./docs/COMPONENTS.md) - UI component patterns
+- [Testing](./docs/TESTING.md) - Test strategies
+- [Authentication](./docs/AUTHENTICATION.md) - Auth flows
+- [PWA](./docs/PWA.md) - Progressive Web App features
+- [Index](./docs/INDEX.md) - Complete documentation index
 
 ## 🤝 Contributing
 

@@ -1,5 +1,7 @@
 # Database TypeScript Fixes - Completed
 
+NOTE: you can use MCP tools to directly query Supabase to get the latest info because this document might go out of date (see 'C:\Users\Allan\source\repos\helloeveryone\mcp')
+
 ## ✅ What Was Accomplished
 
 ### 1. **Database Types Generation**
