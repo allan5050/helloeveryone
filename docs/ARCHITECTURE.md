@@ -60,36 +60,101 @@ export function MatchCard({ matchPercentage }) {
 
 ## Directory Structure
 
+**Current Project Structure:**
+
 ```
 helloeveryone/
-├── app/
-│   ├── (public)/              # Public routes
-│   │   ├── page.tsx           # Landing (Server Component)
-│   │   └── login/page.tsx
-│   ├── (protected)/           # Auth required
-│   │   ├── dashboard/page.tsx # Server Component by default
-│   │   ├── events/
-│   │   │   ├── page.tsx       # List (Server Component)
-│   │   │   └── [id]/page.tsx  # Detail (Server Component)
-│   │   ├── profile/
-│   │   └── matches/
-│   └── api/                   # ALL HIDDEN FROM USERS
-│       ├── match/
-│       │   ├── calculate/route.ts
-│       │   └── suggest/route.ts
-│       ├── embeddings/route.ts
-│       └── calendar/route.ts
-├── components/
-│   ├── ui/                    # Reusable UI (client)
-│   └── features/              # Feature components
-├── lib/
-│   ├── supabase/
-│   │   ├── client.ts          # Browser client
-│   │   ├── server.ts          # Server client (hidden)
-│   │   └── queries.ts         # Database queries (hidden)
-│   └── matching/
-│       └── algorithm.ts       # SERVER ONLY, hidden
-└── middleware.ts              # Runs on edge, hidden
+├── app/                       # Next.js App Router
+│   ├── (public)/             # Public routes - no auth required
+│   │   ├── page.tsx          # Landing page (Server Component)
+│   │   ├── login/page.tsx    # Login page
+│   │   ├── signup/page.tsx   # Signup page
+│   │   └── auth/reset-password/page.tsx
+│   ├── (protected)/          # Protected routes - auth required
+│   │   ├── admin/           # Admin panel (role-based access)
+│   │   │   ├── page.tsx     # Admin dashboard
+│   │   │   ├── analytics/   # Analytics page
+│   │   │   ├── events/      # Event management
+│   │   │   └── users/       # User management
+│   │   ├── chat/            # Messaging system
+│   │   │   ├── page.tsx     # Chat overview
+│   │   │   └── [userId]/    # Individual conversations
+│   │   ├── dashboard/page.tsx # Main user dashboard
+│   │   ├── events/          # Event browsing
+│   │   │   ├── page.tsx     # Event list
+│   │   │   ├── past/        # Past events
+│   │   │   └── [id]/        # Event details
+│   │   ├── favorites/page.tsx # Favorited users
+│   │   └── matches/         # Match results
+│   │       ├── page.tsx     # Match list
+│   │       └── [userId]/    # Individual match details
+│   ├── api/                 # Server-side API (HIDDEN FROM USERS)
+│   │   ├── calendar/        # ICS file generation
+│   │   ├── chat/           # Messaging endpoints
+│   │   ├── events/         # Event management
+│   │   ├── health/         # Health checks
+│   │   ├── match/          # Matching engine
+│   │   ├── privacy/        # Privacy controls
+│   │   └── profile/        # Profile operations
+│   ├── auth/callback/       # OAuth callback handler
+│   ├── contexts/           # React contexts
+│   │   └── AuthContext.tsx # Client-side auth state
+│   ├── globals.css         # Global styles
+│   └── layout.tsx          # Root layout
+├── components/             # Reusable React components
+│   ├── admin/             # Admin panel components
+│   ├── calendar/          # Calendar integration
+│   ├── chat/              # Chat/messaging components
+│   ├── events/            # Event-related components
+│   ├── landing/           # Landing page components
+│   ├── matches/           # Match display components
+│   ├── matching/          # Matching UI components
+│   ├── navigation/        # Navigation components
+│   ├── profile/           # Profile components
+│   ├── ui/                # Basic UI components (shadcn/ui)
+│   ├── PWAInstallPrompt.tsx
+│   └── PWAUpdatePrompt.tsx
+├── hooks/                 # Custom React hooks
+│   ├── useCalendar.ts
+│   ├── useEventMatches.ts
+│   ├── useFavorites.ts
+│   ├── useIsMobile.ts
+│   ├── useMatching.ts
+│   └── useRSVP.ts
+├── lib/                   # Business logic and utilities
+│   ├── api/              # Server-side API helpers (HIDDEN)
+│   │   ├── admin.ts      # Admin operations
+│   │   ├── auth.ts       # Authentication helpers
+│   │   ├── blocking.ts   # User blocking logic
+│   │   ├── chat.ts       # Chat/messaging logic
+│   │   ├── errors.ts     # Error handling
+│   │   ├── favorites.ts  # Favorites management
+│   │   ├── matching.ts   # Matching algorithms
+│   │   ├── messages.ts   # Message handling
+│   │   ├── privacy.ts    # Privacy controls
+│   │   ├── profiles.ts   # Profile operations
+│   │   ├── rate-limit.ts # Rate limiting
+│   │   ├── responses.ts  # API response helpers
+│   │   ├── rsvp.ts       # RSVP logic
+│   │   └── search.ts     # Search functionality
+│   ├── calendar/         # Calendar/ICS utilities
+│   ├── matching/         # Matching algorithms (SERVER ONLY)
+│   ├── privacy/          # Privacy utilities
+│   ├── supabase/         # Database layer
+│   │   ├── client.ts     # Browser client
+│   │   ├── server.ts     # Server client (hidden)
+│   │   └── queries.ts    # Database queries (hidden)
+│   ├── utils/           # General utilities
+│   └── validations/     # Zod validation schemas
+├── types/               # TypeScript type definitions
+│   ├── database.ts      # Generated Supabase types
+│   ├── event.ts         # Event types
+│   ├── index.ts         # Main type exports
+│   ├── profile.ts       # Profile types
+│   └── supabase.ts      # Extended Supabase types
+├── public/              # Static assets
+│   └── manifest.json    # PWA manifest
+└── middleware.ts        # Edge middleware (HIDDEN)
 ```
 
 ## Data Flow Architecture

@@ -35,7 +35,8 @@
       "Bash(timeout 30s npm run lint)",
       "Bash(rg:*)",
       "Bash(npm uninstall:*)",
-      "Bash(timeout 400s npm run build)"
+      "Bash(timeout 400s npm run build)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

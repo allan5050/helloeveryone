@@ -32,7 +32,7 @@ export default function MatchCard({
         ? profile.avatar_url
         : `/avatars/${profile.avatar_url}`
     }
-    return `/api/placeholder/100/100?text=${encodeURIComponent(profile.first_name?.charAt(0) || 'U')}`
+    return `/api/placeholder/100/100?text=${encodeURIComponent(profile.display_name?.charAt(0) || 'U')}`
   }
 
   return (
@@ -48,20 +48,20 @@ export default function MatchCard({
               {profile.avatar_url ? (
                 <Image
                   src={getAvatarSrc()}
-                  alt={`${profile.first_name || 'User'}'s avatar`}
+                  alt={`${profile.display_name || 'User'}'s avatar`}
                   fill
                   className="object-cover"
                   sizes="64px"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-400 to-pink-400 text-xl font-bold text-white">
-                  {profile.first_name?.charAt(0) || 'U'}
+                  {profile.display_name?.charAt(0) || 'U'}
                 </div>
               )}
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {profile.first_name} {profile.last_name?.charAt(0)}.
+                {profile.display_name}
               </h3>
               {profile.age && (
                 <p className="text-sm text-gray-500">{profile.age} years old</p>

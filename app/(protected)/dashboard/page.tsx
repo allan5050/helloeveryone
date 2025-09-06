@@ -27,17 +27,24 @@ export const metadata: Metadata = {
 async function getUpcomingEvents(userId: string) {
   const supabase = await createClient()
 
+  // First get RSVPs for this user
+  const { data: rsvps, error: rsvpError } = await supabase
+    .from('rsvps')
+    .select('event_id')
+    .eq('user_id', userId)
+  
+  if (rsvpError || !rsvps || rsvps.length === 0) {
+    return []
+  }
+
+  // Then get the events for those RSVPs
+  const eventIds = rsvps.map(r => r.event_id)
   const { data: events, error } = await supabase
     .from('events')
-    .select(
-      `
-      *,
-      rsvps!inner(*)
-    `
-    )
-    .eq('rsvps.user_id', userId)
-    .gte('date', new Date().toISOString())
-    .order('date', { ascending: true })
+    .select('*')
+    .in('id', eventIds)
+    .gte('start_time', new Date().toISOString())
+    .order('start_time', { ascending: true })
     .limit(3)
 
   if (error) {
@@ -58,9 +65,7 @@ async function getRecentMatches(userId: string) {
       *,
       profiles!match_scores_user_id_2_fkey(
         user_id,
-        first_name,
-        last_name,
-        avatar_url,
+        display_name,
         bio,
         age,
         interests
@@ -68,8 +73,8 @@ async function getRecentMatches(userId: string) {
     `
     )
     .eq('user_id_1', userId)
-    .gte('total_score', 70)
-    .order('total_score', { ascending: false })
+    .gte('combined_score', 0.7)
+    .order('combined_score', { ascending: false })
     .limit(5)
 
   if (error) {
@@ -88,7 +93,7 @@ async function getMatchStats(userId: string) {
       .from('match_scores')
       .select('id', { count: 'exact' })
       .eq('user_id_1', userId)
-      .gte('total_score', 70),
+      .gte('combined_score', 0.7),
 
     supabase
       .from('favorites')
@@ -305,8 +310,8 @@ async function DashboardContent() {
                 <MatchCard
                   key={match.id}
                   profile={match.profiles}
-                  matchScore={match.total_score}
-                  sharedInterests={match.common_interests || []}
+                  matchScore={match.combined_score * 100}
+                  sharedInterests={[]}
                   className="border-0 shadow-sm hover:shadow-md"
                 />
               ))}

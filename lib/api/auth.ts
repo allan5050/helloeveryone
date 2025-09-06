@@ -41,11 +41,11 @@ export async function requireAuth(request?: NextRequest): Promise<User> {
   const supabase = await createSupabaseServerClient()
 
   const {
-    data: { session },
+    data: { user },
     error,
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getUser()
 
-  if (error || !session?.user) {
+  if (error || !user) {
     // If called from API route (with request), throw error
     // If called from server component (no request), redirect
     if (request) {
@@ -54,30 +54,30 @@ export async function requireAuth(request?: NextRequest): Promise<User> {
     redirect('/login')
   }
 
-  return session.user
+  return user
 }
 
 export async function getCurrentUser(): Promise<User | null> {
   const supabase = await createSupabaseServerClient()
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  return session?.user ?? null
+  return user
 }
 
 export async function requireAuthAPI(): Promise<User> {
   const supabase = await createSupabaseServerClient()
 
   const {
-    data: { session },
+    data: { user },
     error,
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getUser()
 
-  if (error || !session?.user) {
+  if (error || !user) {
     throw new Error('Unauthorized')
   }
 
-  return session.user
+  return user
 }

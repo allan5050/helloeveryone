@@ -7,22 +7,55 @@ algorithms live here.
 
 ## Route Structure
 
+**Current API Routes (19 total):**
+
+```
+app/api/
+├── calendar/
+│   └── event/[eventId]/        # ICS file generation
+├── chat/
+│   ├── conversations/          # Get user's conversations
+│   ├── messages/[userId]/      # Get messages with specific user
+│   └── send/                   # Send a message
+├── events/
+│   ├── rsvp/                   # RSVP to events
+│   ├── social-proof/           # Get event social proof data
+│   ├── suggested/              # Get suggested events based on matches
+│   └── [eventId]/
+│       ├── attendees/          # Get event attendees
+│       └── rsvp/               # Event-specific RSVP
+├── health/                     # Health check endpoint
+├── match/
+│   ├── batch/                  # Batch match calculations
+│   ├── calculate/              # Main matching engine
+│   ├── event/[eventId]/        # Event-specific matches
+│   ├── generate-embeddings/    # OpenAI embedding generation
+│   └── refresh/                # Refresh cached matches
+├── privacy/
+│   ├── block/                  # Block users
+│   ├── delete/                 # Delete account
+│   └── export/                 # GDPR data export
+└── profile/
+    └── favorite/               # Toggle user favorites
+```
+
+**Page Routes:**
 ```
 app/
-├── api/
-│   ├── match/          # Matching engine endpoints
-│   ├── events/         # Event management
-│   ├── profile/        # Profile operations
-│   ├── calendar/       # ICS file generation
-│   ├── chat/           # Messaging endpoints
-│   └── admin/          # Admin operations
-├── auth/
-│   └── callback/       # OAuth callback handler (route.ts)
 ├── (public)/
-│   ├── login/          # Login page (page.tsx)
-│   ├── signup/         # Signup page (page.tsx)
+│   ├── page.tsx               # Landing page
+│   ├── login/page.tsx         # Login page
+│   ├── signup/page.tsx        # Signup page
 │   └── auth/
-│       └── reset-password/  # Password reset (page.tsx)
+│       └── reset-password/page.tsx  # Password reset
+├── (protected)/               # Auth-required routes
+│   ├── admin/                 # Admin panel (role-based)
+│   ├── chat/                  # Messaging interface
+│   ├── dashboard/             # Main user dashboard
+│   ├── events/                # Event browsing and details
+│   ├── favorites/             # User's favorited profiles
+│   └── matches/               # Match results and profiles
+└── auth/callback/route.ts     # OAuth callback handler
 ```
 
 ## Authentication Pattern
