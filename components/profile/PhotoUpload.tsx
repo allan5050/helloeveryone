@@ -129,6 +129,7 @@ export function PhotoUpload({
                 src={displayUrl}
                 alt="Profile photo"
                 fill
+                sizes="(max-width: 640px) 8rem, 10rem"
                 className="rounded-full border-4 border-gray-200 object-cover"
               />
               {isUploading && (

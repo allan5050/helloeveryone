@@ -4,15 +4,18 @@ import { useAuth } from '@/app/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Settings } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface Profile {
   full_name?: string
+  display_name?: string
   bio?: string
   interests?: string[]
   location?: string
   age?: number
+  photo_url?: string
   is_profile_complete?: boolean
 }
 
@@ -35,10 +38,16 @@ export default function ProfilePage() {
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.id)
+          .eq('user_id', user.id)
           .single()
 
         if (error) {
+          // Check if it's a "no rows" error - means profile doesn't exist
+          if (error.code === 'PGRST116') {
+            console.log('No profile found, redirecting to setup...')
+            router.push('/profile/setup')
+            return
+          }
           console.error('Error loading profile:', error)
           router.push('/profile/setup')
           return
@@ -94,16 +103,31 @@ export default function ProfilePage() {
       <div className="mx-auto max-w-md px-4 py-6 sm:max-w-2xl md:max-w-4xl lg:max-w-7xl">
         <div className="rounded-lg border bg-white p-6 shadow-sm">
           <div className="text-center sm:flex sm:items-start sm:text-left">
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-200 sm:mx-0 sm:mb-0 sm:mr-6">
-              <span className="text-2xl font-semibold text-gray-600">
-                {profile?.full_name?.charAt(0).toUpperCase() ||
-                  user?.email?.charAt(0).toUpperCase() ||
-                  'U'}
-              </span>
+            <div className="mx-auto mb-4 h-20 w-20 sm:mx-0 sm:mb-0 sm:mr-6">
+              {profile?.photo_url ? (
+                <div className="relative h-20 w-20">
+                  <Image
+                    src={profile.photo_url}
+                    alt="Profile photo"
+                    fill
+                    sizes="80px"
+                    className="rounded-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-200">
+                  <span className="text-2xl font-semibold text-gray-600">
+                    {profile?.display_name?.charAt(0).toUpperCase() ||
+                      profile?.full_name?.charAt(0).toUpperCase() ||
+                      user?.email?.charAt(0).toUpperCase() ||
+                      'U'}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex-1">
               <h2 className="mb-1 text-xl font-semibold text-gray-900">
-                {profile?.full_name || 'Your Profile'}
+                {profile?.display_name || profile?.full_name || 'Your Profile'}
               </h2>
               <p className="mb-4 text-sm text-gray-600">{user?.email}</p>
               <Link

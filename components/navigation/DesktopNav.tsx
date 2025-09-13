@@ -48,10 +48,10 @@ const navigation = [
 export default function DesktopNav() {
   const pathname = usePathname()
   const router = useRouter()
-  const { logout } = useAuth()
+  const { signOut } = useAuth()
 
   const handleLogout = async () => {
-    await logout()
+    await signOut()
     router.push('/login')
   }
 

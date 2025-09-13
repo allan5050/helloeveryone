@@ -73,36 +73,35 @@ export const profileSetupSchema = z.object({
     .object({
       music_genres: z
         .array(z.enum(MUSIC_GENRES))
-        .max(5, 'Select up to 5 music genres'),
+        .max(5, 'Select up to 5 music genres')
+        .optional()
+        .default([]),
       food_preferences: z
         .array(z.enum(FOOD_PREFERENCES))
-        .max(5, 'Select up to 5 food preferences'),
+        .max(5, 'Select up to 5 food preferences')
+        .optional()
+        .default([]),
       activities: z
         .array(z.enum(ACTIVITIES))
-        .max(8, 'Select up to 8 activities'),
+        .max(8, 'Select up to 8 activities')
+        .optional()
+        .default([]),
     })
-    .refine(
-      data => {
-        const total =
-          data.music_genres.length +
-          data.food_preferences.length +
-          data.activities.length
-        return total >= 3
-      },
-      {
-        message: 'Please select at least 3 interests total',
-        path: ['interests'],
-      }
-    ),
+    .optional()
+    .default({
+      music_genres: [],
+      food_preferences: [],
+      activities: [],
+    }),
   bio: z.string().max(500, 'Bio must be less than 500 characters').optional(),
 })
 
 export const profileEditSchema = profileSetupSchema.extend({
-  visible_fields: z
+  privacy_settings: z
     .object({
-      age_visible: z.boolean().default(true),
-      interests_visible: z.boolean().default(true),
-      bio_visible: z.boolean().default(true),
+      show_age: z.boolean().default(true),
+      show_location: z.boolean().default(true),
+      show_interests: z.boolean().default(true),
     })
     .optional(),
 })

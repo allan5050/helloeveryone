@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -20,6 +20,8 @@ export default function ProfileSetup() {
   const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+  const [isNavigating, setIsNavigating] = useState(false)
+  const lastNavigationTime = useRef(0)
   const router = useRouter()
   const { user } = useAuth()
   const supabase = createClient()
@@ -39,10 +41,53 @@ export default function ProfileSetup() {
     },
   })
 
+  // Debug currentStep changes
+  useEffect(() => {
+    console.log('currentStep changed to:', currentStep)
+    if (currentStep === 2) {
+      console.log('Now on step 2 (Bio & Photo)')
+      console.log('Form values at step 2:', form.getValues())
+      console.log('Form isValid:', form.formState.isValid)
+    }
+  }, [currentStep, form])
+
   const nextStep = async () => {
-    const isValid = await form.trigger(getFieldsForStep(currentStep))
-    if (isValid) {
-      setCurrentStep(prev => Math.min(prev + 1, STEPS.length - 1))
+    // Debounce rapid clicks
+    const now = Date.now()
+    if (now - lastNavigationTime.current < 300) {
+      console.log('Ignoring rapid click')
+      return
+    }
+    lastNavigationTime.current = now
+    
+    // Prevent double-clicking
+    if (isNavigating) {
+      console.log('Navigation already in progress, ignoring')
+      return
+    }
+    
+    console.log('nextStep called, currentStep:', currentStep)
+    setIsNavigating(true)
+    
+    try {
+      // Validate current step's fields
+      const fieldsToValidate = getFieldsForStep(currentStep)
+      const isValid = await form.trigger(fieldsToValidate)
+      
+      console.log('Validation result for step', currentStep, ':', isValid)
+      
+      if (isValid && currentStep < STEPS.length - 1) {
+        console.log('Moving from step', currentStep, 'to step', currentStep + 1)
+        setCurrentStep(currentStep + 1)
+      } else if (!isValid) {
+        console.log('Validation failed for step', currentStep, ', staying on current step')
+        // Show validation errors
+        const errors = form.formState.errors
+        console.log('Validation errors:', errors)
+      }
+    } finally {
+      // Reset navigation flag after a short delay
+      setTimeout(() => setIsNavigating(false), 500)
     }
   }
 
@@ -64,30 +109,59 @@ export default function ProfileSetup() {
   }
 
   const onSubmit = async (data: ProfileSetupData) => {
-    if (!user) return
+    console.log('onSubmit handler called, currentStep:', currentStep)
+    
+    if (!user) {
+      console.error('No user found')
+      return
+    }
+    
+    // This should only be called when we're on the last step
+    // If we're here from another step, something is wrong
+    if (currentStep !== STEPS.length - 1) {
+      console.error('ERROR: Form submitted from wrong step:', currentStep, 'Expected step:', STEPS.length - 1)
+      return
+    }
 
     setIsSubmitting(true)
     try {
-      // Prepare profile data
+      // Flatten the interests object into a single array
+      const flattenedInterests = [
+        ...(data.interests.music_genres || []),
+        ...(data.interests.food_preferences || []),
+        ...(data.interests.activities || [])
+      ]
+
+      // Prepare profile data - match the actual database columns
       const profileData = {
-        id: user.id,
         display_name: data.display_name,
+        full_name: data.display_name, // Use display_name as full_name for now
         age: data.age,
         location: data.location || null,
-        interests: data.interests,
+        interests: flattenedInterests, // Use flattened array
         bio: data.bio || null,
         photo_url: photoUrl,
         is_profile_complete: true,
-        visible_fields: {
-          age_visible: true,
-          interests_visible: true,
-          bio_visible: true,
+        // These are the new columns we added
+        looking_for: ['friends', 'networking'], // Default values for now
+        availability: ['weekends', 'evenings'], // Default values for now
+        preferred_age_min: 25,
+        preferred_age_max: 50,
+        privacy_settings: {
+          show_age: true,
+          show_location: true,
+          show_interests: true,
         },
+        updated_at: new Date().toISOString()
       }
 
+      console.log('Saving profile data:', profileData)
+
+      // Update the profile (it should already exist from the auth trigger)
       const { error } = await supabase
         .from('profiles')
-        .upsert(profileData, { onConflict: 'id' })
+        .update(profileData)
+        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -283,7 +357,32 @@ export default function ProfileSetup() {
 
         {/* Form */}
         <div className="rounded-lg bg-white p-6 shadow-sm">
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form 
+            onSubmit={(e) => {
+              console.log('Form onSubmit event triggered')
+              console.log('Current step:', currentStep)
+              console.log('Event target:', e.target)
+              console.log('Event submitter:', (e as any).submitter)
+              
+              e.preventDefault()
+              e.stopPropagation()
+              
+              // Only allow submission from the last step via the Complete Profile button
+              if (currentStep === STEPS.length - 1 && !isNavigating) {
+                console.log('Processing form submission on last step')
+                form.handleSubmit(onSubmit)(e)
+              } else {
+                console.log('Blocking form submission - step:', currentStep, 'isNavigating:', isNavigating)
+                return false
+              }
+            }}
+            onKeyDown={(e) => {
+              // Prevent form submission on Enter key except for the submit button
+              if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
+                e.preventDefault()
+              }
+            }}
+          >
             {renderStep()}
 
             {/* Navigation Buttons */}
@@ -301,9 +400,10 @@ export default function ProfileSetup() {
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="min-h-[44px] rounded-lg bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700"
+                  disabled={isNavigating}
+                  className="min-h-[44px] rounded-lg bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Next
+                  {isNavigating ? 'Validating...' : 'Next'}
                 </button>
               ) : (
                 <button

@@ -13,6 +13,7 @@ import { useAuth } from '@/app/contexts/AuthContext'
 export default function ProfileEdit() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const router = useRouter()
   const { user } = useAuth()
@@ -30,10 +31,10 @@ export default function ProfileEdit() {
         activities: [],
       },
       bio: '',
-      visible_fields: {
-        age_visible: true,
-        interests_visible: true,
-        bio_visible: true,
+      privacy_settings: {
+        show_age: true,
+        show_location: true,
+        show_interests: true,
       },
     },
   })
@@ -47,26 +48,45 @@ export default function ProfileEdit() {
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.id)
+          .eq('user_id', user.id)
           .single()
 
         if (error) throw error
 
         if (profile) {
+          // Import the interest constants to properly categorize
+          const { MUSIC_GENRES, FOOD_PREFERENCES, ACTIVITIES } = await import('@/lib/validations/profile')
+          
+          // Convert flat interests array back to categorized object
+          const categorizedInterests = {
+            music_genres: [] as string[],
+            food_preferences: [] as string[],
+            activities: [] as string[],
+          }
+          
+          // Properly categorize the interests based on the defined constants
+          if (Array.isArray(profile.interests)) {
+            profile.interests.forEach((interest: string) => {
+              if (MUSIC_GENRES.includes(interest as any)) {
+                categorizedInterests.music_genres.push(interest)
+              } else if (FOOD_PREFERENCES.includes(interest as any)) {
+                categorizedInterests.food_preferences.push(interest)
+              } else if (ACTIVITIES.includes(interest as any)) {
+                categorizedInterests.activities.push(interest)
+              }
+            })
+          }
+          
           form.reset({
             display_name: profile.display_name || '',
             age: profile.age || 25,
             location: profile.location || '',
-            interests: profile.interests || {
-              music_genres: [],
-              food_preferences: [],
-              activities: [],
-            },
+            interests: categorizedInterests,
             bio: profile.bio || '',
-            visible_fields: profile.visible_fields || {
-              age_visible: true,
-              interests_visible: true,
-              bio_visible: true,
+            privacy_settings: profile.privacy_settings || {
+              show_age: true,
+              show_location: true,
+              show_interests: true,
             },
           })
           setPhotoUrl(profile.photo_url)
@@ -86,25 +106,44 @@ export default function ProfileEdit() {
 
     setIsSubmitting(true)
     try {
+      // Flatten the interests object into a single array
+      const flattenedInterests = [
+        ...(data.interests.music_genres || []),
+        ...(data.interests.food_preferences || []),
+        ...(data.interests.activities || [])
+      ]
+      
       const profileData = {
-        id: user.id,
         display_name: data.display_name,
         age: data.age,
         location: data.location || null,
-        interests: data.interests,
+        interests: flattenedInterests, // Use flattened array
         bio: data.bio || null,
         photo_url: photoUrl,
-        visible_fields: data.visible_fields,
+        privacy_settings: data.privacy_settings,
         updated_at: new Date().toISOString(),
       }
 
+      // Use update instead of upsert to avoid RLS policy issues
       const { error } = await supabase
         .from('profiles')
-        .upsert(profileData, { onConflict: 'id' })
+        .update(profileData)
+        .eq('user_id', user.id)
 
       if (error) throw error
 
-      router.push('/dashboard')
+      // Show success message and keep user on the page
+      setShowSuccess(true)
+      
+      // Scroll to the bottom to show the success message
+      setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+      }, 100)
+      
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => {
+        setShowSuccess(false)
+      }, 5000)
     } catch (error) {
       console.error('Error updating profile:', error)
       alert('Failed to update profile. Please try again.')
@@ -291,7 +330,7 @@ export default function ProfileEdit() {
                 <label className="flex items-center space-x-3">
                   <input
                     type="checkbox"
-                    {...form.register('visible_fields.age_visible')}
+                    {...form.register('privacy_settings.show_age')}
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">Show my age</span>
@@ -300,34 +339,61 @@ export default function ProfileEdit() {
                 <label className="flex items-center space-x-3">
                   <input
                     type="checkbox"
-                    {...form.register('visible_fields.interests_visible')}
+                    {...form.register('privacy_settings.show_location')}
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">
-                    Show my interests
-                  </span>
+                  <span className="text-sm text-gray-700">Show my location</span>
                 </label>
 
                 <label className="flex items-center space-x-3">
                   <input
                     type="checkbox"
-                    {...form.register('visible_fields.bio_visible')}
+                    {...form.register('privacy_settings.show_interests')}
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">Show my bio</span>
+                  <span className="text-sm text-gray-700">Show my interests</span>
                 </label>
               </div>
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end border-t border-gray-200 pt-6">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="min-h-[44px] rounded-lg bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
-              </button>
+            <div className="border-t border-gray-200 pt-6">
+              {/* Success Message */}
+              {showSuccess && (
+                <div className="mb-4 animate-in slide-in-from-bottom-2 rounded-lg bg-green-50 p-4 transition-all duration-300">
+                  <div className="flex items-start">
+                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <div className="ml-3 flex-1">
+                      <p className="text-sm font-medium text-green-800">
+                        Profile saved successfully!
+                      </p>
+                      <p className="mt-1 text-sm text-green-700">
+                        Your changes have been saved. You can continue editing or{' '}
+                        <button
+                          type="button"
+                          onClick={() => router.push('/dashboard')}
+                          className="font-medium underline hover:text-green-800"
+                        >
+                          return to dashboard
+                        </button>
+                        .
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="min-h-[44px] rounded-lg bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
             </div>
           </form>
         </div>
