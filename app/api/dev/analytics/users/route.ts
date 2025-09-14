@@ -1,0 +1,25 @@
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+
+export async function GET() {
+  try {
+    const supabase = await createClient()
+
+    // Fetch all demo users
+    const { data: users, error } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, full_name, bio, age, location, interests, photo_url')
+      .like('display_name', 'Demo:%')
+      .order('display_name')
+
+    if (error) {
+      console.error('Error fetching users:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ users: users || [] })
+  } catch (error) {
+    console.error('Unexpected error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
