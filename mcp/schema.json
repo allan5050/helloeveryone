@@ -5,7 +5,7 @@
     "blocks": {
       "size": "104 kB",
       "comment": null,
-      "row_count": 1,
+      "row_count": 0,
       "columns": [
         {
           "column_name": "id",
@@ -79,7 +79,7 @@
     "events": {
       "size": "160 kB",
       "comment": null,
-      "row_count": 5,
+      "row_count": 0,
       "columns": [
         {
           "column_name": "id",
@@ -215,7 +215,7 @@
     "favorites": {
       "size": "104 kB",
       "comment": null,
-      "row_count": 5,
+      "row_count": 0,
       "columns": [
         {
           "column_name": "id",
@@ -289,7 +289,7 @@
     "match_scores": {
       "size": "176 kB",
       "comment": null,
-      "row_count": 4,
+      "row_count": 0,
       "columns": [
         {
           "column_name": "id",
@@ -405,7 +405,7 @@
     "meeting_slots": {
       "size": "80 kB",
       "comment": null,
-      "row_count": 2,
+      "row_count": 0,
       "columns": [
         {
           "column_name": "id",
@@ -544,7 +544,7 @@
     "messages": {
       "size": "192 kB",
       "comment": null,
-      "row_count": 4,
+      "row_count": 0,
       "columns": [
         {
           "column_name": "id",
@@ -649,9 +649,9 @@
       ]
     },
     "profiles": {
-      "size": "3608 kB",
+      "size": "3720 kB",
       "comment": null,
-      "row_count": 5,
+      "row_count": 1,
       "columns": [
         {
           "column_name": "id",
@@ -768,11 +768,108 @@
           "character_maximum_length": null,
           "is_nullable": "YES",
           "column_default": null,
+          "comment": "Vector embedding of user bio for semantic matching"
+        },
+        {
+          "column_name": "is_profile_complete",
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": "false",
+          "comment": "Indicates whether the user has completed their profile setup"
+        },
+        {
+          "column_name": "photo_url",
+          "data_type": "text",
+          "udt_name": "text",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
+          "comment": "URL to the user profile photo stored in storage bucket"
+        },
+        {
+          "column_name": "preferred_age_min",
+          "data_type": "integer",
+          "udt_name": "int4",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": "18",
+          "comment": "Minimum age preference for matching"
+        },
+        {
+          "column_name": "preferred_age_max",
+          "data_type": "integer",
+          "udt_name": "int4",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": "99",
+          "comment": "Maximum age preference for matching"
+        },
+        {
+          "column_name": "looking_for",
+          "data_type": "ARRAY",
+          "udt_name": "_text",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": "'{}'::text[]",
+          "comment": "Array of relationship types user is looking for"
+        },
+        {
+          "column_name": "availability",
+          "data_type": "ARRAY",
+          "udt_name": "_text",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": "'{}'::text[]",
+          "comment": "Array of time slots when user is available"
+        },
+        {
+          "column_name": "privacy_settings",
+          "data_type": "jsonb",
+          "udt_name": "jsonb",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": "'{\"show_age\": true, \"show_location\": true, \"show_interests\": true}'::jsonb",
+          "comment": "JSON object containing privacy preferences"
+        },
+        {
+          "column_name": "full_name",
+          "data_type": "text",
+          "udt_name": "text",
+          "character_maximum_length": null,
+          "is_nullable": "YES",
+          "column_default": null,
           "comment": null
         }
       ],
       "foreign_keys": [],
       "rls_policies": [
+        {
+          "name": "Public profiles are viewable by everyone",
+          "command": "SELECT",
+          "permissive": "PERMISSIVE"
+        },
+        {
+          "name": "Users can delete own profile",
+          "command": "DELETE",
+          "permissive": "PERMISSIVE"
+        },
+        {
+          "name": "Users can insert own profile",
+          "command": "INSERT",
+          "permissive": "PERMISSIVE"
+        },
+        {
+          "name": "Users can update own profile",
+          "command": "UPDATE",
+          "permissive": "PERMISSIVE"
+        },
+        {
+          "name": "Users can view all profiles",
+          "command": "SELECT",
+          "permissive": "PERMISSIVE"
+        },
         {
           "name": "allow_delete_own_profile",
           "command": "DELETE",
@@ -798,7 +895,7 @@
     "rsvps": {
       "size": "184 kB",
       "comment": null,
-      "row_count": 15,
+      "row_count": 0,
       "columns": [
         {
           "column_name": "id",
@@ -1236,6 +1333,11 @@
       "returns": "double precision"
     },
     {
+      "name": "handle_new_user",
+      "type": "FUNCTION",
+      "returns": "trigger"
+    },
+    {
       "name": "hnsw_bit_support",
       "type": "FUNCTION",
       "returns": "internal"
@@ -1354,6 +1456,11 @@
       "name": "set_limit",
       "type": "FUNCTION",
       "returns": "real"
+    },
+    {
+      "name": "set_profile_id",
+      "type": "FUNCTION",
+      "returns": "trigger"
     },
     {
       "name": "show_limit",
