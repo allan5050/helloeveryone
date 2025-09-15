@@ -8,7 +8,7 @@ import FavoriteButton from '@/components/profile/FavoriteButton'
 
 interface FavoriteProfile {
   id: string
-  name: string
+  display_name: string
   bio: string | null
   photo_url: string | null
   age: number | null
@@ -31,7 +31,7 @@ async function getFavorites(): Promise<FavoriteProfile[]> {
       favorited_user_id,
       profiles!favorites_favorited_user_id_fkey (
         id,
-        name,
+        display_name,
         bio,
         photo_url,
         age,
@@ -58,7 +58,7 @@ function FavoriteCard({ profile }: { profile: FavoriteProfile }) {
           {profile.photo_url ? (
             <Image
               src={profile.photo_url}
-              alt={profile.name}
+              alt={profile.display_name}
               fill
               className="object-cover"
             />
@@ -77,7 +77,7 @@ function FavoriteCard({ profile }: { profile: FavoriteProfile }) {
       <div className="p-4">
         <div className="mb-2 flex items-start justify-between">
           <h3 className="text-lg font-semibold text-gray-900">
-            {profile.name}
+            {profile.display_name}
             {profile.age && (
               <span className="font-normal text-gray-600">, {profile.age}</span>
             )}

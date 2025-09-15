@@ -37,7 +37,8 @@
       "Bash(npm uninstall:*)",
       "Bash(timeout 400s npm run build)",
       "Bash(git add:*)",
-      "Read(//c/Users/Allan/Downloads/**)"
+      "Read(//c/Users/Allan/Downloads/**)",
+      "Bash(netstat:*)"
     ],
     "deny": [],
     "ask": []

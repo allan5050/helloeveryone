@@ -13,12 +13,12 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/app/contexts/AuthContext'
 import MatchCard from '@/components/matching/MatchCard'
+import MatchExplanations from '@/components/matching/MatchExplanations'
 
 interface Match {
   id: string
   combined_score: number
-  common_interests: string[]
-  created_at: string
+  calculated_at: string
   profiles: {
     user_id: string
     display_name: string
@@ -28,10 +28,12 @@ interface Match {
     location?: string
     is_favorite?: boolean
   }
+  common_interests?: string[]
 }
 
 type ViewMode = 'grid' | 'list'
 type SortOption = 'score' | 'date' | 'interests'
+type ShowMode = 'everyone' | 'matches'
 
 export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([])
@@ -41,19 +43,136 @@ export default function MatchesPage() {
   const [minScore, setMinScore] = useState(70)
   const [sortBy, setSortBy] = useState<SortOption>('score')
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
+  const [showMode, setShowMode] = useState<ShowMode>('everyone')
   const [showFilters, setShowFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [hasNextPage, setHasNextPage] = useState(false)
+  const [currentUserData, setCurrentUserData] = useState<{bio?: string, interests?: string[]}>({})
   const { user } = useAuth()
   const supabase = createClient()
 
   const itemsPerPage = 12
 
+  // Helper function to determine match quality
+  const getMatchQuality = (score: number): 'high' | 'medium' | 'low' => {
+    if (score >= 0.8) return 'high'
+    if (score >= 0.6) return 'medium'
+    return 'low'
+  }
+
+  const getMatchQualityColor = (quality: 'high' | 'medium' | 'low') => {
+    switch (quality) {
+      case 'high': return 'bg-green-100 text-green-800'
+      case 'medium': return 'bg-yellow-100 text-yellow-800'
+      case 'low': return 'bg-gray-100 text-gray-800'
+    }
+  }
+
   useEffect(() => {
     if (user) {
-      fetchMatches()
+      if (showMode === 'everyone') {
+        fetchEveryone()
+      } else {
+        fetchMatches()
+      }
     }
-  }, [user, minScore, sortBy, currentPage])
+  }, [user, minScore, sortBy, currentPage, showMode])
+
+  const fetchEveryone = async () => {
+    if (!user) return
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Get current user's profile for interests and bio
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('interests, bio')
+        .eq('user_id', user.id)
+        .single()
+
+      const userInterests = userProfile?.interests || []
+      setCurrentUserData({ bio: userProfile?.bio, interests: userInterests })
+
+      let query = supabase
+        .from('profiles')
+        .select(
+          `
+          user_id,
+          display_name,
+          bio,
+          age,
+          interests,
+          location
+        `,
+          { count: 'exact' }
+        )
+        .neq('user_id', user.id)
+        .eq('is_active', true)
+
+      // Pagination
+      const from = (currentPage - 1) * itemsPerPage
+      const to = from + itemsPerPage - 1
+      query = query.range(from, to)
+
+      const { data, error, count } = await query
+
+      if (error) {
+        console.error('Error fetching profiles:', error)
+        setError('Failed to load profiles. Please try again.')
+        return
+      }
+
+      if (data && data.length > 0) {
+        // Get favorites
+        const userIds = data.map(profile => profile.user_id)
+        const { data: favorites } = await supabase
+          .from('favorites')
+          .select('favorited_user_id')
+          .eq('user_id', user.id)
+          .in('favorited_user_id', userIds)
+
+        const favoriteIds = new Set(
+          favorites?.map(f => f.favorited_user_id) || []
+        )
+
+        // Convert profiles to match format
+        const profilesAsMatches = data.map(profile => {
+          // Calculate common interests
+          const profileInterests = profile.interests || []
+          const commonInterests = userInterests.filter(interest =>
+            profileInterests.includes(interest)
+          )
+
+          // Calculate a simple compatibility score based on common interests
+          const compatibilityScore = commonInterests.length / Math.max(userInterests.length, 1)
+
+          return {
+            id: `profile-${profile.user_id}`,
+            combined_score: compatibilityScore,
+            calculated_at: new Date().toISOString(),
+            common_interests: commonInterests,
+            profiles: {
+              ...profile,
+              is_favorite: favoriteIds.has(profile.user_id),
+            },
+          }
+        })
+
+        setMatches(profilesAsMatches)
+      } else {
+        setMatches([])
+      }
+
+      setHasNextPage(count ? count > currentPage * itemsPerPage : false)
+    } catch (error) {
+      console.error('Error fetching profiles:', error)
+      setError('An unexpected error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchMatches = async () => {
     if (!user) return
@@ -68,8 +187,7 @@ export default function MatchesPage() {
           `
           id,
           combined_score,
-          common_interests,
-          created_at,
+          calculated_at,
           profiles!match_scores_user_id_2_fkey(
             user_id,
             display_name,
@@ -84,18 +202,23 @@ export default function MatchesPage() {
         .eq('user_id_1', user.id)
         .gte('combined_score', minScore / 100)
 
-      // Apply sorting
+      // Apply sorting - always prioritize highest scores by default
       switch (sortBy) {
         case 'score':
           query = query.order('combined_score', { ascending: false })
           break
         case 'date':
-          query = query.order('created_at', { ascending: false })
+          query = query.order('calculated_at', { ascending: false })
           break
         case 'interests':
           // Sort by number of common interests (handled in client-side filtering)
           query = query.order('combined_score', { ascending: false })
           break
+      }
+
+      // Default sorting always by score first
+      if (sortBy !== 'score') {
+        query = query.order('combined_score', { ascending: false })
       }
 
       // Pagination
@@ -111,28 +234,49 @@ export default function MatchesPage() {
         return
       }
 
-      // Check for favorites
+      // Check for favorites and compute common interests
       if (data && data.length > 0) {
         const userIds = data.map(match => match.profiles.user_id)
+
+        // Get current user's profile for interests and bio
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('interests, bio')
+          .eq('user_id', user.id)
+          .single()
+
+        const userInterests = userProfile?.interests || []
+        setCurrentUserData({ bio: userProfile?.bio, interests: userInterests })
+
+        // Get favorites
         const { data: favorites } = await supabase
           .from('favorites')
-          .select('favorite_user_id')
+          .select('favorited_user_id')
           .eq('user_id', user.id)
-          .in('favorite_user_id', userIds)
+          .in('favorited_user_id', userIds)
 
         const favoriteIds = new Set(
-          favorites?.map(f => f.favorite_user_id) || []
+          favorites?.map(f => f.favorited_user_id) || []
         )
 
-        const matchesWithFavorites = data.map(match => ({
-          ...match,
-          profiles: {
-            ...match.profiles,
-            is_favorite: favoriteIds.has(match.profiles.user_id),
-          },
-        }))
+        const matchesWithExtendedData = data.map(match => {
+          // Calculate common interests
+          const matchInterests = match.profiles.interests || []
+          const commonInterests = userInterests.filter(interest =>
+            matchInterests.includes(interest)
+          )
 
-        setMatches(matchesWithFavorites)
+          return {
+            ...match,
+            common_interests: commonInterests,
+            profiles: {
+              ...match.profiles,
+              is_favorite: favoriteIds.has(match.profiles.user_id),
+            },
+          }
+        })
+
+        setMatches(matchesWithExtendedData)
       } else {
         setMatches([])
       }
@@ -156,24 +300,46 @@ export default function MatchesPage() {
         match =>
           match.profiles.display_name?.toLowerCase().includes(searchLower) ||
           match.profiles.bio?.toLowerCase().includes(searchLower) ||
-          match.common_interests.some(interest =>
+          (match.common_interests || []).some(interest =>
             interest.toLowerCase().includes(searchLower)
           )
       )
     }
 
-    // Sort by interests if selected
-    if (sortBy === 'interests') {
-      filtered = [...filtered].sort(
-        (a, b) => b.common_interests.length - a.common_interests.length
-      )
-    }
+    // Always sort by match score first (highest to lowest), then apply secondary sorting
+    filtered = [...filtered].sort((a, b) => {
+      // Primary sort: by match score (highest first)
+      const scoreA = a.combined_score
+      const scoreB = b.combined_score
+
+      if (scoreA !== scoreB) {
+        return scoreB - scoreA // Higher scores first
+      }
+
+      // Secondary sort based on selected option
+      if (sortBy === 'interests') {
+        return (b.common_interests || []).length - (a.common_interests || []).length
+      } else if (sortBy === 'date') {
+        return new Date(b.calculated_at).getTime() - new Date(a.calculated_at).getTime()
+      }
+
+      return 0
+    })
 
     return filtered
   }, [matches, searchTerm, sortBy])
 
   const handleLoadMore = () => {
     setCurrentPage(prev => prev + 1)
+  }
+
+  const handleRefreshData = () => {
+    setCurrentPage(1)
+    if (showMode === 'everyone') {
+      fetchEveryone()
+    } else {
+      fetchMatches()
+    }
   }
 
   if (!user) {
@@ -189,13 +355,47 @@ export default function MatchesPage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold text-gray-900">
-            Your Matches
-          </h1>
-          <p className="text-gray-600">
-            {filteredMatches.length} compatible{' '}
-            {filteredMatches.length === 1 ? 'person' : 'people'} found
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="mb-2 text-3xl font-bold text-gray-900">
+                {showMode === 'everyone' ? 'Find People' : 'Your Matches'}
+              </h1>
+              <p className="text-gray-600">
+                {filteredMatches.length}{' '}
+                {filteredMatches.length === 1 ? 'person' : 'people'} to explore
+              </p>
+            </div>
+
+            {/* Mode Toggle */}
+            <div className="flex rounded-lg bg-gray-100 p-1">
+              <button
+                onClick={() => {
+                  setShowMode('everyone')
+                  setCurrentPage(1)
+                }}
+                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                  showMode === 'everyone'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Everyone
+              </button>
+              <button
+                onClick={() => {
+                  setShowMode('matches')
+                  setCurrentPage(1)
+                }}
+                className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                  showMode === 'matches'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Your Matches
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -317,7 +517,7 @@ export default function MatchesPage() {
                 </h3>
                 <p className="mt-1 text-sm text-red-700">{error}</p>
                 <button
-                  onClick={() => fetchMatches()}
+                  onClick={handleRefreshData}
                   className="mt-2 rounded bg-red-100 px-3 py-1 text-sm text-red-800 transition-colors hover:bg-red-200"
                 >
                   Try Again
@@ -326,6 +526,7 @@ export default function MatchesPage() {
             </div>
           </div>
         )}
+
 
         {/* Matches Grid/List */}
         {loading && currentPage === 1 ? (
@@ -366,15 +567,23 @@ export default function MatchesPage() {
                   : 'mx-auto max-w-4xl grid-cols-1'
               }`}
             >
-              {filteredMatches.map(match => (
-                <MatchCard
-                  key={match.id}
-                  profile={match.profiles}
-                  matchScore={match.combined_score * 100}
-                  sharedInterests={match.common_interests}
-                  className={viewMode === 'list' ? 'w-full' : ''}
-                />
-              ))}
+              {filteredMatches.map(match => {
+                const matchScore = match.combined_score * 100
+                const matchQuality = getMatchQuality(match.combined_score)
+
+                return (
+                  <MatchCard
+                    key={match.id}
+                    profile={match.profiles}
+                    matchScore={matchScore}
+                    sharedInterests={match.common_interests || []}
+                    className={viewMode === 'list' ? 'w-full' : ''}
+                    showAIButton={matchQuality === 'high' || matchQuality === 'medium'}
+                    currentUserBio={currentUserData.bio}
+                    currentUserInterests={currentUserData.interests}
+                  />
+                )
+              })}
             </div>
 
             {/* Load More Button */}
@@ -396,30 +605,55 @@ export default function MatchesPage() {
               <Search className="h-8 w-8 text-gray-400" />
             </div>
             <h3 className="mb-2 text-lg font-semibold text-gray-900">
-              {searchTerm || minScore > 70
-                ? 'No matches found'
-                : 'No matches yet'}
+              {showMode === 'everyone'
+                ? (searchTerm ? 'No people found' : 'Loading people...')
+                : (searchTerm || minScore > 70 ? 'No matches found' : 'Building your matches...')}
             </h3>
             <p className="mb-4 text-gray-600">
-              {searchTerm || minScore > 70
-                ? 'Try adjusting your search or filters'
-                : 'Complete your profile and attend events to find matches'}
+              {showMode === 'everyone'
+                ? (searchTerm ? 'Try adjusting your search to discover more people' : 'Great connections are just around the corner!')
+                : (searchTerm || minScore > 70
+                  ? 'Try adjusting your search or filters to see more potential connections'
+                  : 'Complete your profile and attend events to unlock amazing matches')}
             </p>
-            {!searchTerm && minScore <= 70 && (
+            {showMode === 'everyone' ? (
               <div className="flex flex-col justify-center gap-3 sm:flex-row">
-                <Link
-                  href="/profile"
+                <button
+                  onClick={() => setSearchTerm('')}
                   className="rounded-lg bg-purple-600 px-4 py-2 text-center text-white transition-colors hover:bg-purple-700"
                 >
-                  Update Profile
-                </Link>
+                  Clear Search
+                </button>
                 <Link
                   href="/events"
                   className="rounded-lg bg-gray-100 px-4 py-2 text-center text-gray-700 transition-colors hover:bg-gray-200"
                 >
-                  Find Events
+                  Join Events
                 </Link>
               </div>
+            ) : (
+              !searchTerm && minScore <= 70 && (
+                <div className="flex flex-col justify-center gap-3 sm:flex-row">
+                  <Link
+                    href="/profile"
+                    className="rounded-lg bg-purple-600 px-4 py-2 text-center text-white transition-colors hover:bg-purple-700"
+                  >
+                    Complete Profile
+                  </Link>
+                  <button
+                    onClick={() => setShowMode('everyone')}
+                    className="rounded-lg bg-blue-100 px-4 py-2 text-center text-blue-700 transition-colors hover:bg-blue-200"
+                  >
+                    Explore Everyone
+                  </button>
+                  <Link
+                    href="/events"
+                    className="rounded-lg bg-gray-100 px-4 py-2 text-center text-gray-700 transition-colors hover:bg-gray-200"
+                  >
+                    Find Events
+                  </Link>
+                </div>
+              )
             )}
           </div>
         )}

@@ -215,7 +215,7 @@
     "favorites": {
       "size": "104 kB",
       "comment": null,
-      "row_count": 0,
+      "row_count": 1,
       "columns": [
         {
           "column_name": "id",
@@ -649,9 +649,9 @@
       ]
     },
     "profiles": {
-      "size": "3720 kB",
+      "size": "4040 kB",
       "comment": null,
-      "row_count": 1,
+      "row_count": 26,
       "columns": [
         {
           "column_name": "id",
