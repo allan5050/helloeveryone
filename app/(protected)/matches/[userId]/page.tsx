@@ -223,13 +223,21 @@ async function MatchDetailContent({ params }: PageProps) {
   }) : []
 
   const getAvatarSrc = () => {
-    // Profile might not have avatar_url in the type definition
-    const avatarUrl = (profile as any).avatar_url
-    if (avatarUrl) {
-      return avatarUrl.startsWith('http')
-        ? avatarUrl
-        : `/avatars/${avatarUrl}`
+    // Check for photo_url first (new field for local images)
+    const photoUrl = (profile as any).photo_url
+    if (photoUrl) {
+      // Handle local images from public folder
+      if (photoUrl.startsWith('/images/')) {
+        return photoUrl
+      }
+      // Handle full URLs
+      if (photoUrl.startsWith('http')) {
+        return photoUrl
+      }
     }
+
+    // No avatar_url available, proceed to placeholder
+
     const fullName = (profile as any).full_name
     return `/api/placeholder/200/200?text=${encodeURIComponent((fullName || profile.display_name || 'U').charAt(0))}`
   }
@@ -285,7 +293,7 @@ async function MatchDetailContent({ params }: PageProps) {
           <div className="flex flex-col space-y-6 md:flex-row md:items-start md:space-x-8 md:space-y-0">
             {/* Avatar */}
             <div className="relative mx-auto h-32 w-32 flex-shrink-0 overflow-hidden rounded-full bg-gray-100 md:mx-0">
-              {(profile as any).avatar_url ? (
+              {(profile as any).photo_url ? (
                 <Image
                   src={getAvatarSrc()}
                   alt={`${(profile as any).full_name || profile.display_name}'s avatar`}

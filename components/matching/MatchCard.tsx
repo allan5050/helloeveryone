@@ -50,7 +50,7 @@ export default function MatchCard({
         // Check if we have cached insights
         const { data: cachedInsight } = await supabase
           .from('ai_insights')
-          .select('*')
+          .select('compatibility_reason, meeting_suggestions')
           .eq('user_id', user.id)
           .eq('target_user_id', profile.user_id)
           .single()
@@ -162,11 +162,21 @@ export default function MatchCard({
   }) : []
 
   const getAvatarSrc = () => {
-    if (profile.avatar_url) {
-      return profile.avatar_url.startsWith('http')
-        ? profile.avatar_url
-        : `/avatars/${profile.avatar_url}`
+    // Check for photo_url first (new field for local images)
+    const photoUrl = (profile as any).photo_url
+    if (photoUrl) {
+      // Handle local images from public folder
+      if (photoUrl.startsWith('/images/')) {
+        return photoUrl
+      }
+      // Handle full URLs
+      if (photoUrl.startsWith('http')) {
+        return photoUrl
+      }
     }
+
+    // No avatar_url available, proceed to placeholder
+
     return `/api/placeholder/100/100?text=${encodeURIComponent(profile.display_name?.charAt(0) || 'U')}`
   }
 
@@ -180,7 +190,7 @@ export default function MatchCard({
         <div className="mb-3 flex items-start justify-between">
           <div className="flex items-center space-x-3">
             <div className="relative h-16 w-16 overflow-hidden rounded-full bg-gray-100">
-              {profile.avatar_url ? (
+              {(profile as any).photo_url ? (
                 <Image
                   src={getAvatarSrc()}
                   alt={`${profile.display_name || 'User'}'s avatar`}

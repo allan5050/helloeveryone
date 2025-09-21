@@ -39,7 +39,8 @@
       "Bash(git add:*)",
       "Read(//c/Users/Allan/Downloads/**)",
       "Bash(netstat:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm run export-demo:*)"
     ],
     "deny": [],
     "ask": []

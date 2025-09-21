@@ -538,9 +538,10 @@ export default function EnhancedNetworkGraph({
             const centerX = d3.mean(xValues) || 0
 
             // Position label above the topmost node with extra padding
+            const labelOffset = isFullscreen ? 80 : 65
             container.append('text')
               .attr('x', centerX)
-              .attr('y', minY - 40)
+              .attr('y', minY - labelOffset)
               .attr('text-anchor', 'middle')
               .attr('font-size', isFullscreen ? '18px' : '14px')
               .attr('font-weight', 'bold')

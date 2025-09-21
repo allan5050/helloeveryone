@@ -40,7 +40,7 @@ export default function MatchesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [minScore, setMinScore] = useState(70)
+  const [minScore, setMinScore] = useState(0) // Show all matches by default
   const [sortBy, setSortBy] = useState<SortOption>('score')
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [showMode, setShowMode] = useState<ShowMode>('everyone')
@@ -51,7 +51,7 @@ export default function MatchesPage() {
   const { user } = useAuth()
   const supabase = createClient()
 
-  const itemsPerPage = 12
+  const itemsPerPage = 50 // Show more profiles per page
 
   // Helper function to determine match quality
   const getMatchQuality = (score: number): 'high' | 'medium' | 'low' => {
@@ -104,7 +104,8 @@ export default function MatchesPage() {
           bio,
           age,
           interests,
-          location
+          location,
+          photo_url
         `,
           { count: 'exact' }
         )
@@ -194,7 +195,8 @@ export default function MatchesPage() {
             bio,
             age,
             interests,
-            location
+            location,
+            photo_url
           )
         `,
           { count: 'exact' }
@@ -465,6 +467,7 @@ export default function MatchesPage() {
                     }}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
                   >
+                    <option value={0}>All matches</option>
                     <option value={50}>50% and above</option>
                     <option value={60}>60% and above</option>
                     <option value={70}>70% and above</option>
@@ -492,9 +495,11 @@ export default function MatchesPage() {
                   <button
                     onClick={() => {
                       setSearchTerm('')
-                      setMinScore(70)
+                      setMinScore(0) // Reset to show all
                       setSortBy('score')
                       setCurrentPage(1)
+                      setShowMode('everyone') // Switch to everyone mode to see all
+                      setShowFilters(false) // Close filters panel
                     }}
                     className="w-full rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200"
                   >
@@ -607,12 +612,12 @@ export default function MatchesPage() {
             <h3 className="mb-2 text-lg font-semibold text-gray-900">
               {showMode === 'everyone'
                 ? (searchTerm ? 'No people found' : 'Loading people...')
-                : (searchTerm || minScore > 70 ? 'No matches found' : 'Building your matches...')}
+                : (searchTerm || minScore > 0 ? 'No matches found' : 'Building your matches...')}
             </h3>
             <p className="mb-4 text-gray-600">
               {showMode === 'everyone'
                 ? (searchTerm ? 'Try adjusting your search to discover more people' : 'Great connections are just around the corner!')
-                : (searchTerm || minScore > 70
+                : (searchTerm || minScore > 0
                   ? 'Try adjusting your search or filters to see more potential connections'
                   : 'Complete your profile and attend events to unlock amazing matches')}
             </p>
@@ -632,7 +637,7 @@ export default function MatchesPage() {
                 </Link>
               </div>
             ) : (
-              !searchTerm && minScore <= 70 && (
+              !searchTerm && minScore <= 0 && (
                 <div className="flex flex-col justify-center gap-3 sm:flex-row">
                   <Link
                     href="/profile"
