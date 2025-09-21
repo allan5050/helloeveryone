@@ -11,6 +11,7 @@ import MatchExplanation from '@/components/matching/MatchExplanation'
 import FavoriteButton from '@/components/profile/FavoriteButton'
 import MessageButton from '@/components/profile/MessageButton'
 import AIInsightSection from '@/components/matching/AIInsightSection'
+import Avatar from '@/components/ui/Avatar'
 
 interface PageProps {
   params: Promise<{
@@ -292,21 +293,13 @@ async function MatchDetailContent({ params }: PageProps) {
         <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6">
           <div className="flex flex-col space-y-6 md:flex-row md:items-start md:space-x-8 md:space-y-0">
             {/* Avatar */}
-            <div className="relative mx-auto h-32 w-32 flex-shrink-0 overflow-hidden rounded-full bg-gray-100 md:mx-0">
-              {(profile as any).photo_url ? (
-                <Image
-                  src={getAvatarSrc()}
-                  alt={`${(profile as any).full_name || profile.display_name}'s avatar`}
-                  fill
-                  className="object-cover"
-                  sizes="128px"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-400 to-pink-400 text-3xl font-bold text-white">
-                  {((profile as any).full_name || profile.display_name || 'U').charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
+            <Avatar
+              src={getAvatarSrc()}
+              alt={`${(profile as any).full_name || profile.display_name}'s avatar`}
+              fallbackText={(profile as any).full_name || profile.display_name || 'User'}
+              size="lg"
+              className="mx-auto flex-shrink-0 md:mx-0"
+            />
 
             {/* Profile Info */}
             <div className="flex-1 text-center md:text-left">

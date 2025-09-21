@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { MessageCircle, Sparkles, Loader, RefreshCw } from 'lucide-react'
 import { Profile } from '@/types'
 import FavoriteButton from '@/components/profile/FavoriteButton'
+import Avatar from '@/components/ui/Avatar'
 import { createClient } from '@/lib/supabase/client'
 
 interface MatchCardProps {
@@ -189,21 +190,12 @@ export default function MatchCard({
         {/* Header with Avatar and Score */}
         <div className="mb-3 flex items-start justify-between">
           <div className="flex items-center space-x-3">
-            <div className="relative h-16 w-16 overflow-hidden rounded-full bg-gray-100">
-              {(profile as any).photo_url ? (
-                <Image
-                  src={getAvatarSrc()}
-                  alt={`${profile.display_name || 'User'}'s avatar`}
-                  fill
-                  className="object-cover"
-                  sizes="64px"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-400 to-pink-400 text-xl font-bold text-white">
-                  {profile.display_name?.charAt(0) || 'U'}
-                </div>
-              )}
-            </div>
+            <Avatar
+              src={getAvatarSrc()}
+              alt={`${profile.display_name || 'User'}'s avatar`}
+              fallbackText={profile.display_name || 'User'}
+              size="sm"
+            />
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
                 {profile.display_name}

@@ -112,7 +112,56 @@ export default function AnalyticsPage() {
           </p>
         </div>
 
-        {/* Controls */}
+        {/* Stats Cards - Moved to top */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-medium">Total Users</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{users.length}</div>
+              <p className="text-sm text-gray-500">Demo profiles</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-medium">Avg Match Score</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">
+                {matchScores.length > 0
+                  ? (matchScores.reduce((a, b) => a + b.score, 0) / matchScores.length).toFixed(2)
+                  : '0.00'}
+              </div>
+              <p className="text-sm text-gray-500">Across all pairs</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-medium">Strong Matches</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">
+                {matchScores.filter(s => s.score > 0.7).length}
+              </div>
+              <p className="text-sm text-gray-500">Score &gt; 0.7</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-medium">Unique Interests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{allInterests.length}</div>
+              <p className="text-sm text-gray-500">Across platform</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters & Controls - Moved closer to graph */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -179,55 +228,6 @@ export default function AnalyticsPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium">Total Users</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{users.length}</div>
-              <p className="text-sm text-gray-500">Demo profiles</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium">Avg Match Score</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {matchScores.length > 0
-                  ? (matchScores.reduce((a, b) => a + b.score, 0) / matchScores.length).toFixed(2)
-                  : '0.00'}
-              </div>
-              <p className="text-sm text-gray-500">Across all pairs</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium">Strong Matches</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {matchScores.filter(s => s.score > 0.7).length}
-              </div>
-              <p className="text-sm text-gray-500">Score &gt; 0.7</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-medium">Unique Interests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{allInterests.length}</div>
-              <p className="text-sm text-gray-500">Across platform</p>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Visualizations */}
         <Tabs defaultValue="network" className="space-y-4">

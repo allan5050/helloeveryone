@@ -40,7 +40,9 @@
       "Read(//c/Users/Allan/Downloads/**)",
       "Bash(netstat:*)",
       "Bash(curl:*)",
-      "Bash(npm run export-demo:*)"
+      "Bash(npm run export-demo:*)",
+      "Bash(taskkill:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
