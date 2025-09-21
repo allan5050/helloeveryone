@@ -31,10 +31,11 @@ function calculateAgeCompatibility(age1: number, age2: number): number {
   return 0.2
 }
 
-// Calculate location match (same zip code = 1, different = 0)
+// Calculate location match (simple - same zip = 1, different = 0.3)
 function calculateLocationMatch(loc1: string, loc2: string): number {
   if (!loc1 || !loc2) return 0.5
-  return loc1 === loc2 ? 1.0 : 0.0
+  // Simple matching - same zip gets full score, different gets partial
+  return loc1 === loc2 ? 1.0 : 0.3
 }
 
 // Calculate overall match score
@@ -58,11 +59,11 @@ export async function GET() {
   try {
     const supabase = await createClient()
 
-    // Fetch all demo users
+    // Fetch all demo users plus Allan for match scores
     const { data: users, error } = await supabase
       .from('profiles')
       .select('user_id, display_name, age, location, interests, bio')
-      .like('display_name', 'Demo:%')
+      .or('display_name.like.Demo:%,display_name.eq.Allan')
 
     if (error) {
       console.error('Error fetching users:', error)

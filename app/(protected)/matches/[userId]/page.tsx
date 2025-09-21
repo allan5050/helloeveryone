@@ -6,9 +6,11 @@ import Link from 'next/link'
 import { ArrowLeft, MapPin, Calendar, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/api/auth'
+import { calculateDistanceBetweenZips, formatDistance } from '@/lib/utils/distance'
 import MatchExplanation from '@/components/matching/MatchExplanation'
 import FavoriteButton from '@/components/profile/FavoriteButton'
 import MessageButton from '@/components/profile/MessageButton'
+import AIInsightSection from '@/components/matching/AIInsightSection'
 
 interface PageProps {
   params: Promise<{
@@ -19,8 +21,26 @@ interface PageProps {
 async function getMatchDetails(currentUserId: string, matchUserId: string) {
   const supabase = await createClient()
 
-  // Get match score and profile data
-  const [matchResult, profileResult, commonEventsResult, favoriteResult] =
+  // Get both profiles to check locations
+  const [profileResult, currentUserProfileResult] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', matchUserId)
+      .single(),
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', currentUserId)
+      .single()
+  ])
+
+  if (profileResult.error) {
+    return null
+  }
+
+  // Get match score and other data (check both directions)
+  const [matchResult, matchResultReverse, commonEventsResult, favoriteResult] =
     await Promise.all([
       supabase
         .from('match_scores')
@@ -29,7 +49,12 @@ async function getMatchDetails(currentUserId: string, matchUserId: string) {
         .eq('user_id_2', matchUserId)
         .single(),
 
-      supabase.from('profiles').select('*').eq('user_id', matchUserId).single(),
+      supabase
+        .from('match_scores')
+        .select('*')
+        .eq('user_id_1', matchUserId)
+        .eq('user_id_2', currentUserId)
+        .single(),
 
       // Get common events both users have RSVPed to
       supabase
@@ -53,10 +78,6 @@ async function getMatchDetails(currentUserId: string, matchUserId: string) {
         .single(),
     ])
 
-  if (matchResult.error || profileResult.error) {
-    return null
-  }
-
   // Process common events (events where both users have RSVPs)
   const eventRsvps = commonEventsResult.data || []
   const eventUserCounts = eventRsvps.reduce(
@@ -72,9 +93,33 @@ async function getMatchDetails(currentUserId: string, matchUserId: string) {
     .filter(([_, count]) => count >= 2)
     .map(([title]) => title)
 
+  // Calculate common interests between users
+  const userInterests = currentUserProfileResult.data?.interests || []
+  const matchInterests = profileResult.data.interests || []
+  const commonInterests = userInterests.filter((interest: string) =>
+    matchInterests.some((mInterest: string) =>
+      mInterest.toLowerCase() === interest.toLowerCase()
+    )
+  )
+
+  // Use match score from either direction
+  const dbMatch = matchResult.data || matchResultReverse.data
+
+  // Create a normalized match object with all the fields we need
+  const match = {
+    combined_score: dbMatch?.combined_score || 0,
+    total_score: dbMatch ? dbMatch.combined_score * 100 : 0,
+    common_interests: commonInterests,
+    bio_similarity: dbMatch?.semantic_score || 0,
+    location_score: 0,
+    user_id_1: currentUserId,
+    user_id_2: matchUserId
+  }
+
   return {
-    match: matchResult.data,
+    match,
     profile: profileResult.data,
+    currentUserProfile: currentUserProfileResult.data,
     commonEvents,
     isFavorite: !favoriteResult.error,
   }
@@ -145,20 +190,80 @@ async function MatchDetailContent({ params }: PageProps) {
     notFound()
   }
 
-  const { match, profile, commonEvents, isFavorite } = matchDetails
+  const { match, profile, currentUserProfile, commonEvents, isFavorite } = matchDetails
+
+  // Calculate distance if both users have locations
+  const distance = calculateDistanceBetweenZips(currentUserProfile?.location, profile.location)
+
+  // Get current user's interests for comparison
+  const currentUserInterests = currentUserProfile?.interests || []
+
+  // Calculate common interests for display
+  const profileInterests = profile.interests || []
+  const commonInterests = currentUserInterests.filter((interest: string) =>
+    profileInterests.some((pInterest: string) =>
+      pInterest.toLowerCase() === interest.toLowerCase()
+    )
+  )
+
+  // Sort interests: shared ones first, then others
+  const sortedInterests = profile.interests ? [...profile.interests].sort((a, b) => {
+    const aIsShared = currentUserInterests.some(interest =>
+      interest.toLowerCase() === a.toLowerCase() ||
+      match.common_interests?.includes(a)
+    )
+    const bIsShared = currentUserInterests.some(interest =>
+      interest.toLowerCase() === b.toLowerCase() ||
+      match.common_interests?.includes(b)
+    )
+
+    if (aIsShared && !bIsShared) return -1
+    if (!aIsShared && bIsShared) return 1
+    return 0
+  }) : []
 
   const getAvatarSrc = () => {
-    if (profile.avatar_url) {
-      return profile.avatar_url.startsWith('http')
-        ? profile.avatar_url
-        : `/avatars/${profile.avatar_url}`
+    // Profile might not have avatar_url in the type definition
+    const avatarUrl = (profile as any).avatar_url
+    if (avatarUrl) {
+      return avatarUrl.startsWith('http')
+        ? avatarUrl
+        : `/avatars/${avatarUrl}`
     }
-    return `/api/placeholder/200/200?text=${encodeURIComponent(profile.first_name?.charAt(0) || 'U')}`
+    const fullName = (profile as any).full_name
+    return `/api/placeholder/200/200?text=${encodeURIComponent((fullName || profile.display_name || 'U').charAt(0))}`
   }
 
   const calculateAgeCompatibility = () => {
     const ageDiff = Math.abs((profile.age || 30) - 30) // Assume current user is 30 for demo
     return Math.max(0, 100 - ageDiff * 5) // Decrease 5% per year difference
+  }
+
+  // Determine match quality based on score or shared interests
+  const getMatchQuality = (): 'high' | 'medium' | 'low' => {
+    // First try to use the actual combined score from database
+    if (match.combined_score > 0) {
+      if (match.combined_score >= 0.8) return 'high'
+      if (match.combined_score >= 0.6) return 'medium'
+      return 'low'
+    }
+
+    // If no match score, use shared interests as a fallback
+    if (commonInterests.length >= 3) return 'medium'
+    if (commonInterests.length >= 1) return 'low'
+
+    // Default to low for profiles with no match data
+    return 'low'
+  }
+
+  const matchQuality = getMatchQuality()
+
+  const getMatchQualityColor = (quality: 'high' | 'medium' | 'low') => {
+    switch (quality) {
+      case 'high': return 'bg-green-100 text-green-800'
+      case 'medium': return 'bg-yellow-100 text-yellow-800'
+      case 'low': return 'bg-gray-100 text-gray-800'
+    }
   }
 
   return (
@@ -180,17 +285,17 @@ async function MatchDetailContent({ params }: PageProps) {
           <div className="flex flex-col space-y-6 md:flex-row md:items-start md:space-x-8 md:space-y-0">
             {/* Avatar */}
             <div className="relative mx-auto h-32 w-32 flex-shrink-0 overflow-hidden rounded-full bg-gray-100 md:mx-0">
-              {profile.avatar_url ? (
+              {(profile as any).avatar_url ? (
                 <Image
                   src={getAvatarSrc()}
-                  alt={`${profile.first_name}'s avatar`}
+                  alt={`${(profile as any).full_name || profile.display_name}'s avatar`}
                   fill
                   className="object-cover"
                   sizes="128px"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-400 to-pink-400 text-3xl font-bold text-white">
-                  {profile.first_name?.charAt(0) || 'U'}
+                  {((profile as any).full_name || profile.display_name || 'U').charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
@@ -200,7 +305,7 @@ async function MatchDetailContent({ params }: PageProps) {
               <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
                   <h2 className="mb-1 text-2xl font-bold text-gray-900">
-                    {profile.first_name} {profile.last_name?.charAt(0)}.
+                    {(profile as any).full_name || profile.display_name || 'User'}
                   </h2>
                   <div className="flex items-center justify-center space-x-4 text-gray-600 md:justify-start">
                     {profile.age && (
@@ -213,15 +318,20 @@ async function MatchDetailContent({ params }: PageProps) {
                       <span className="flex items-center space-x-1">
                         <MapPin className="h-4 w-4" />
                         <span>{profile.location}</span>
+                        {distance !== null && (
+                          <span className="text-purple-600 font-medium">
+                            ({formatDistance(distance)})
+                          </span>
+                        )}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Match Score Badge */}
+                {/* Match Quality Badge - always show */}
                 <div className="mt-4 md:mt-0">
-                  <div className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-lg font-bold text-white">
-                    {Math.round(match.total_score)}% Match
+                  <div className={`rounded-full px-4 py-2 text-lg font-bold capitalize ${getMatchQualityColor(matchQuality)}`}>
+                    {matchQuality} Match
                   </div>
                 </div>
               </div>
@@ -234,30 +344,43 @@ async function MatchDetailContent({ params }: PageProps) {
               )}
 
               {/* Interests */}
-              {profile.interests && profile.interests.length > 0 && (
+              {sortedInterests.length > 0 && (
                 <div className="mb-6">
                   <h3 className="mb-3 font-semibold text-gray-900">
                     Interests
                   </h3>
                   <div className="flex flex-wrap justify-center gap-2 md:justify-start">
-                    {profile.interests.map((interest, index) => {
-                      const isShared =
-                        match.common_interests?.includes(interest)
+                    {sortedInterests.map((interest, index) => {
+                      const isShared = currentUserInterests.some(userInterest =>
+                        userInterest.toLowerCase() === interest.toLowerCase()
+                      ) || match.common_interests?.includes(interest)
+
                       return (
                         <span
                           key={index}
-                          className={`rounded-full px-3 py-1 text-sm font-medium ${
+                          className={`rounded-full px-3 py-1 text-sm font-medium transition-all ${
                             isShared
-                              ? 'bg-purple-100 text-purple-700 ring-2 ring-purple-200'
-                              : 'bg-gray-100 text-gray-700'
+                              ? 'bg-purple-100 text-purple-700 ring-2 ring-purple-200 shadow-sm'
+                              : 'bg-gray-100 text-gray-600'
                           }`}
                         >
                           {interest}
-                          {isShared && ' ✨'}
+                          {isShared && (
+                            <span className="ml-1" aria-label="Shared interest">✨</span>
+                          )}
                         </span>
                       )
                     })}
                   </div>
+                  {currentUserInterests.length > 0 && sortedInterests.some(interest =>
+                    currentUserInterests.some(userInterest =>
+                      userInterest.toLowerCase() === interest.toLowerCase()
+                    )
+                  ) && (
+                    <p className="mt-3 text-sm text-purple-600">
+                      ✨ Highlighted interests are ones you share
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -278,6 +401,19 @@ async function MatchDetailContent({ params }: PageProps) {
             </div>
           </div>
         </div>
+
+        {/* AI Insights Section - Show button for all profiles */}
+        <AIInsightSection
+          targetUserId={profile.user_id}
+          targetUserBio={profile.bio || undefined}
+          targetUserInterests={profile.interests || undefined}
+          currentUserBio={currentUserProfile?.bio || undefined}
+          currentUserInterests={currentUserInterests}
+          currentUserLocation={currentUserProfile?.location || undefined}
+          sharedInterests={match.common_interests || commonInterests}
+          matchQuality={matchQuality}
+          className="mb-8"
+        />
 
         {/* Common Events */}
         {commonEvents.length > 0 && (
@@ -300,15 +436,17 @@ async function MatchDetailContent({ params }: PageProps) {
           </div>
         )}
 
-        {/* Match Explanation */}
-        <MatchExplanation
-          matchScore={match.total_score}
-          sharedInterests={match.common_interests || []}
-          ageCompatibility={calculateAgeCompatibility()}
-          bioSimilarity={match.bio_similarity || 75}
-          locationScore={match.location_score || 85}
-          commonEvents={commonEvents}
-        />
+        {/* Match Explanation - only show if we have a match score */}
+        {match.total_score > 0 && (
+          <MatchExplanation
+            matchScore={match.total_score}
+            sharedInterests={match.common_interests || []}
+            ageCompatibility={calculateAgeCompatibility()}
+            bioSimilarity={match.bio_similarity || 75}
+            locationScore={match.location_score || 85}
+            commonEvents={commonEvents}
+          />
+        )}
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useAuth } from '@/app/contexts/AuthContext'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/Button'
@@ -33,6 +34,7 @@ interface MatchScore {
 }
 
 export default function AnalyticsPage() {
+  const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [matchScores, setMatchScores] = useState<MatchScore[]>([])
   const [loading, setLoading] = useState(true)
@@ -102,10 +104,10 @@ export default function AnalyticsPage() {
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">
             User Analytics Dashboard
           </h1>
-          <p className="text-gray-600">
+          <p className="text-lg text-gray-600">
             Data science visualization for user matching algorithms
           </p>
         </div>
@@ -121,7 +123,7 @@ export default function AnalyticsPage() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">Interest Filter</label>
+                <label className="text-base font-medium mb-2 block">Interest Filter</label>
                 <Select value={filterInterest} onValueChange={setFilterInterest}>
                   <SelectTrigger>
                     <SelectValue />
@@ -138,7 +140,7 @@ export default function AnalyticsPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-1 block">
+                <label className="text-base font-medium mb-2 block">
                   Min Score: {minScore.toFixed(2)}
                 </label>
                 <Slider
@@ -152,7 +154,7 @@ export default function AnalyticsPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-1 block">Selected User</label>
+                <label className="text-base font-medium mb-2 block">Selected User</label>
                 <Select value={selectedUser || 'none'} onValueChange={v => setSelectedUser(v === 'none' ? null : v)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -182,54 +184,54 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <CardTitle className="text-lg font-medium">Total Users</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{users.length}</div>
-              <p className="text-xs text-gray-500">Demo profiles</p>
+              <div className="text-3xl font-bold">{users.length}</div>
+              <p className="text-sm text-gray-500">Demo profiles</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Avg Match Score</CardTitle>
+              <CardTitle className="text-lg font-medium">Avg Match Score</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-3xl font-bold">
                 {matchScores.length > 0
                   ? (matchScores.reduce((a, b) => a + b.score, 0) / matchScores.length).toFixed(2)
                   : '0.00'}
               </div>
-              <p className="text-xs text-gray-500">Across all pairs</p>
+              <p className="text-sm text-gray-500">Across all pairs</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Strong Matches</CardTitle>
+              <CardTitle className="text-lg font-medium">Strong Matches</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-3xl font-bold">
                 {matchScores.filter(s => s.score > 0.7).length}
               </div>
-              <p className="text-xs text-gray-500">Score &gt; 0.7</p>
+              <p className="text-sm text-gray-500">Score &gt; 0.7</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Unique Interests</CardTitle>
+              <CardTitle className="text-lg font-medium">Unique Interests</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{allInterests.length}</div>
-              <p className="text-xs text-gray-500">Across platform</p>
+              <div className="text-3xl font-bold">{allInterests.length}</div>
+              <p className="text-sm text-gray-500">Across platform</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Visualizations */}
         <Tabs defaultValue="network" className="space-y-4">
-          <TabsList className="grid grid-cols-5 w-full max-w-lg">
+          <TabsList className="grid grid-cols-5 w-full max-w-lg text-base">
             <TabsTrigger value="network">Network</TabsTrigger>
             <TabsTrigger value="heatmap">Heatmap</TabsTrigger>
             <TabsTrigger value="overlap">Overlap</TabsTrigger>
@@ -252,10 +254,11 @@ export default function AnalyticsPage() {
                   selectedUser={selectedUser}
                   onUserSelect={setSelectedUser}
                   minScore={minScore}
+                  currentUserId={currentUser?.id}
                 />
 
                 <div>
-                  <h3 className="font-semibold text-sm mb-3">Additional Dimensions</h3>
+                  <h3 className="font-semibold text-lg mb-3">Additional Dimensions</h3>
                   <DimensionGraphs
                     users={filteredUsers}
                     matchScores={filteredScores}
@@ -333,7 +336,7 @@ export default function AnalyticsPage() {
                 {/* Core Algorithm */}
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-lg mb-3">Core Matching Algorithm</h3>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-3 text-base">
                     <div className="font-mono bg-white p-3 rounded border">
                       <div>match_score = Σ(w_i × f_i)</div>
                       <div className="mt-2 text-gray-600">where:</div>
@@ -472,21 +475,21 @@ export default function AnalyticsPage() {
                   <h3 className="font-semibold text-lg mb-3">Current System Stats</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <div className="text-2xl font-bold">{users.length}</div>
+                      <div className="text-3xl font-bold">{users.length}</div>
                       <div className="text-gray-600">Total Users</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold">{matchScores.length}</div>
+                      <div className="text-3xl font-bold">{matchScores.length}</div>
                       <div className="text-gray-600">Computed Pairs</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold">
+                      <div className="text-3xl font-bold">
                         {matchScores.filter(s => s.score > 0.5).length}
                       </div>
                       <div className="text-gray-600">Strong Matches</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold">
+                      <div className="text-3xl font-bold">
                         {matchScores.length > 0
                           ? (matchScores.reduce((a, b) => a + b.score, 0) / matchScores.length * 100).toFixed(0)
                           : 0}%

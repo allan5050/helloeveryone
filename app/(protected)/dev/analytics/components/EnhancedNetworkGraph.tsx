@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
+import { getZipProximityScore, areZipsNearby } from '@/lib/location/zip-distance'
+import { Maximize2, Minimize2 } from 'lucide-react'
 
 interface User {
   user_id: string
@@ -23,6 +25,7 @@ interface NetworkGraphProps {
   selectedUser: string | null
   onUserSelect: (userId: string | null) => void
   minScore: number
+  currentUserId?: string
 }
 
 type LayoutMode = 'force' | 'geographic' | 'interest' | 'age' | 'community'
@@ -32,13 +35,16 @@ export default function EnhancedNetworkGraph({
   matchScores,
   selectedUser,
   onUserSelect,
-  minScore = 0.3
+  minScore = 0.3,
+  currentUserId
 }: NetworkGraphProps) {
   const svgRef = useRef<SVGSVGElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('force')
   const [communities, setCommunities] = useState<Map<string, number>>(new Map())
   const [clusterExplanation, setClusterExplanation] = useState<string>('')
   const [communityDetails, setCommunityDetails] = useState<Map<number, string>>(new Map())
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   useEffect(() => {
     if (!svgRef.current || users.length === 0) return
@@ -46,8 +52,9 @@ export default function EnhancedNetworkGraph({
     // Clear previous graph
     d3.select(svgRef.current).selectAll('*').remove()
 
-    const width = 900
-    const height = 600
+    const containerElement = containerRef.current
+    const width = isFullscreen ? window.innerWidth - 100 : 1200
+    const height = isFullscreen ? window.innerHeight - 200 : 800
     const svg = d3.select(svgRef.current)
       .attr('width', width)
       .attr('height', height)
@@ -58,7 +65,8 @@ export default function EnhancedNetworkGraph({
       name: user.display_name.replace('Demo: ', ''),
       interests: user.interests,
       age: user.age,
-      location: user.location
+      location: user.location,
+      isCurrentUser: user.user_id === currentUserId
     }))
 
     // Get user IDs that are in the filtered set
@@ -135,40 +143,136 @@ export default function EnhancedNetworkGraph({
         const communityUsers = users.filter(u => members.some(m => m[0] === u.user_id))
 
         if (communityUsers.length > 1) {
-          // Find common interests
+          // Find common interests with more sophisticated grouping
           const interestCounts = new Map<string, number>()
+          const interestCategories = new Map<string, string[]>()
+
+          // Define interest categories for better grouping
+          const categories = {
+            'Tech/Gaming': ['sci-fi', 'star-wars', 'video-games', 'programming', 'tech', 'anime', 'esports', 'virtual-reality'],
+            'Fitness': ['crossfit', 'yoga', 'running', 'cycling', 'triathlon', 'hiking', 'nutrition', 'fitness'],
+            'Arts': ['art', 'painting', 'photography', 'music', 'concerts', 'creative-writing', 'poetry'],
+            'Food/Drink': ['coffee', 'wine', 'cooking', 'baking', 'craft-beer', 'farmers-markets', 'restaurants'],
+            'Family': ['parenting', 'kids', 'pta', 'playdates', 'family'],
+            'Environment': ['sustainability', 'climate', 'vegan', 'organic', 'zero-waste'],
+            'Intellectual': ['books', 'philosophy', 'politics', 'history', 'documentaries', 'museums'],
+            'Sports': ['basketball', 'football', 'baseball', 'warriors', 'giants', 'fantasy-football']
+          }
+
           communityUsers.forEach(user => {
             user.interests?.forEach(interest => {
               interestCounts.set(interest, (interestCounts.get(interest) || 0) + 1)
+
+              // Find category for interest
+              for (const [category, keywords] of Object.entries(categories)) {
+                if (keywords.some(k => interest.includes(k) || k.includes(interest))) {
+                  if (!interestCategories.has(category)) {
+                    interestCategories.set(category, [])
+                  }
+                  interestCategories.get(category)!.push(interest)
+                  break
+                }
+              }
             })
           })
 
-          // Find interests shared by at least 50% of the community
+          // Find dominant interest category
+          let dominantCategory = ''
+          let maxCategoryScore = 0
+          interestCategories.forEach((interests, category) => {
+            const score = interests.length
+            if (score > maxCategoryScore) {
+              maxCategoryScore = score
+              dominantCategory = category
+            }
+          })
+
+          // Find interests shared by at least 40% of the community (lowered threshold for diversity)
           const commonInterests = Array.from(interestCounts.entries())
-            .filter(([_, count]) => count >= communityUsers.length * 0.5)
+            .filter(([_, count]) => count >= communityUsers.length * 0.4)
+            .sort((a, b) => b[1] - a[1])
             .map(([interest, _]) => interest)
             .slice(0, 3)
 
-          // Check location commonality
+          // Analyze location proximity
           const locationCounts = new Map<string, number>()
+          const locationClusters: string[][] = []
+
           communityUsers.forEach(user => {
             locationCounts.set(user.location, (locationCounts.get(user.location) || 0) + 1)
           })
-          const dominantLocation = Array.from(locationCounts.entries())
-            .sort((a, b) => b[1] - a[1])[0]
 
-          // Calculate average age
-          const avgAge = Math.round(d3.mean(communityUsers, u => u.age) || 0)
+          // Group nearby zip codes
+          const locations = Array.from(new Set(communityUsers.map(u => u.location)))
+          const processedLocations = new Set<string>()
 
-          // Build description
+          locations.forEach(loc1 => {
+            if (processedLocations.has(loc1)) return
+            const cluster = [loc1]
+            processedLocations.add(loc1)
+
+            locations.forEach(loc2 => {
+              if (!processedLocations.has(loc2) && areZipsNearby(loc1, loc2, 5)) {
+                cluster.push(loc2)
+                processedLocations.add(loc2)
+              }
+            })
+
+            if (cluster.length > 0) {
+              locationClusters.push(cluster)
+            }
+          })
+
+          // Find dominant location cluster
+          let dominantLocationDesc = ''
+          const largestCluster = locationClusters.sort((a, b) => b.length - a.length)[0]
+          if (largestCluster && largestCluster.length >= communityUsers.length * 0.5) {
+            if (largestCluster.length === 1) {
+              dominantLocationDesc = `${largestCluster[0]} area`
+            } else {
+              // Show zip code range for nearby areas
+              const prefix = largestCluster[0].substring(0, 3)
+              dominantLocationDesc = `${prefix}xx area`
+            }
+          }
+
+          // Calculate age range instead of just average
+          const ages = communityUsers.map(u => u.age)
+          const minAge = Math.min(...ages)
+          const maxAge = Math.max(...ages)
+          const avgAge = Math.round(d3.mean(ages) || 0)
+          const ageDesc = minAge === maxAge ? `Age ${minAge}` : `Ages ${minAge}-${maxAge} (avg ${avgAge})`
+
+          // Check if current user is in this community
+          const hasCurrentUser = currentUserId && communityUsers.some(u => u.user_id === currentUserId)
+
+          // Build richer description with explanations
           let description = `${communityUsers.length} members`
+
+          if (dominantCategory) {
+            description += ` • ${dominantCategory} focus`
+            // Add explanation of how category was determined
+            const categoryInterests = interestCategories.get(dominantCategory) || []
+            if (categoryInterests.length > 0) {
+              const uniqueInterests = [...new Set(categoryInterests)].slice(0, 3)
+              description += ` (${uniqueInterests.join(', ')})`
+            }
+          }
+
           if (commonInterests.length > 0) {
-            description += ` • Common: ${commonInterests.join(', ')}`
+            const percentage = Math.round((interestCounts.get(commonInterests[0]) || 0) / communityUsers.length * 100)
+            description += ` • ${percentage}% share: ${commonInterests.map(i => i.replace(/-/g, ' ')).join(', ')}`
           }
-          if (dominantLocation && dominantLocation[1] >= communityUsers.length * 0.5) {
-            description += ` • ${dominantLocation[0]} area`
+
+          if (dominantLocationDesc) {
+            description += ` • ${dominantLocationDesc}`
           }
-          description += ` • Avg age: ${avgAge}`
+
+          description += ` • ${ageDesc}`
+
+          if (hasCurrentUser) {
+            description += ' • ⭐ YOUR COMMUNITY'
+          }
 
           details.set(communityId, description)
         }
@@ -381,24 +485,44 @@ export default function EnhancedNetworkGraph({
     // Add circles for nodes
     node.append('circle')
       .attr('r', d => {
+        if (d.isCurrentUser) return 25 // Larger size for current user
         const connectionCount = links.filter(l =>
           l.source === d.id || l.target === d.id ||
           (l.source as any).id === d.id || (l.target as any).id === d.id
         ).length
         return Math.min(20, 10 + connectionCount)
       })
-      .attr('fill', d => getNodeColor(d))
-      .attr('stroke', d => d.id === selectedUser ? '#000' : '#fff')
-      .attr('stroke-width', d => d.id === selectedUser ? 3 : 1.5)
+      .attr('fill', d => {
+        if (d.isCurrentUser) return '#fbbf24' // Bright yellow/gold for current user
+        return getNodeColor(d)
+      })
+      .attr('stroke', d => {
+        if (d.isCurrentUser) return '#dc2626' // Red border for current user
+        return d.id === selectedUser ? '#000' : '#fff'
+      })
+      .attr('stroke-width', d => {
+        if (d.isCurrentUser) return 4
+        return d.id === selectedUser ? 3 : 1.5
+      })
+      .attr('opacity', d => d.isCurrentUser ? 1 : 0.9)
 
     // Add labels
     node.append('text')
-      .text(d => d.name)
+      .text(d => d.isAllan ? d.name : d.isCurrentUser ? `⭐ ${d.name} (YOU)` : d.name)
       .attr('x', 0)
-      .attr('y', -25)
+      .attr('y', d => {
+        const offset = isFullscreen ? 45 : 35
+        return (d.isCurrentUser || d.isAllan) ? -offset : -(offset - 10)
+      })
       .attr('text-anchor', 'middle')
-      .attr('font-size', '11px')
-      .attr('font-weight', d => d.id === selectedUser ? 'bold' : 'normal')
+      .attr('font-size', d => {
+        if (isFullscreen) {
+          return (d.isCurrentUser || d.isAllan) ? '20px' : '16px'
+        }
+        return (d.isCurrentUser || d.isAllan) ? '16px' : '13px'
+      })
+      .attr('font-weight', d => d.isCurrentUser || d.isAllan || d.id === selectedUser ? 'bold' : 'normal')
+      .attr('fill', d => d.isAllan ? '#d97706' : d.isCurrentUser ? '#dc2626' : '#000')
 
     // Add community labels for community view (rendered after simulation stabilizes)
     if (layoutMode === 'community') {
@@ -418,7 +542,7 @@ export default function EnhancedNetworkGraph({
               .attr('x', centerX)
               .attr('y', minY - 40)
               .attr('text-anchor', 'middle')
-              .attr('font-size', '12px')
+              .attr('font-size', isFullscreen ? '18px' : '14px')
               .attr('font-weight', 'bold')
               .attr('fill', '#666')
               .style('text-shadow', '0 0 3px white, 0 0 3px white')
@@ -497,18 +621,44 @@ export default function EnhancedNetworkGraph({
     return () => {
       simulation.stop()
     }
-  }, [users, matchScores, selectedUser, onUserSelect, minScore, layoutMode])
+  }, [users, matchScores, selectedUser, onUserSelect, minScore, layoutMode, isFullscreen])
+
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      if (containerRef.current?.requestFullscreen) {
+        containerRef.current.requestFullscreen()
+      }
+      setIsFullscreen(true)
+    } else {
+      if (document.fullscreenElement) {
+        document.exitFullscreen()
+      }
+      setIsFullscreen(false)
+    }
+  }
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
 
   return (
-    <div className="space-y-4">
+    <div
+      ref={containerRef}
+      className={`space-y-4 ${isFullscreen ? 'fixed inset-0 bg-white z-50 p-8 overflow-auto' : ''}`}>
       {/* Layout Controls */}
-      <div className="flex gap-4 items-center">
-        <div>
-          <label className="text-sm font-medium mb-1 block">Graph Layout:</label>
+      <div className="flex gap-4 items-center justify-between">
+        <div className="flex gap-4 items-center">
+          <div>
+            <label className={`font-medium mb-1 block ${isFullscreen ? 'text-lg' : 'text-sm'}`}>Graph Layout:</label>
           <select
             value={layoutMode}
             onChange={(e) => setLayoutMode(e.target.value as LayoutMode)}
-            className="px-3 py-2 border border-gray-200 rounded-md text-sm"
+            className={`px-3 py-2 border border-gray-200 rounded-md ${isFullscreen ? 'text-base' : 'text-sm'}`}
           >
             <option value="force">Force-Directed (Natural Clustering)</option>
             <option value="community">Community Detection</option>
@@ -516,7 +666,17 @@ export default function EnhancedNetworkGraph({
             <option value="age">Age Distribution</option>
             <option value="interest">Interest Groups</option>
           </select>
+          </div>
         </div>
+        <button
+          onClick={toggleFullscreen}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+        >
+          {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+          <span className={isFullscreen ? 'text-base' : 'text-sm'}>
+            {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+          </span>
+        </button>
       </div>
 
       {/* Graph */}
@@ -524,7 +684,7 @@ export default function EnhancedNetworkGraph({
         <svg ref={svgRef} className="w-full border rounded bg-gray-50"></svg>
 
         {/* Legend */}
-        <div className="absolute top-2 right-2 bg-white p-3 rounded shadow text-xs space-y-3 max-w-xs">
+        <div className={`absolute top-2 right-2 bg-white p-3 rounded shadow space-y-3 max-w-xs ${isFullscreen ? 'text-base p-4' : 'text-xs'}`}>
           <div>
             <div className="font-semibold mb-1">
               {layoutMode === 'community' ? 'Communities (Auto-Detected):' :
@@ -561,7 +721,7 @@ export default function EnhancedNetworkGraph({
               </div>
             )}
             {layoutMode === 'community' && (
-              <div className="text-xs text-gray-600">
+              <div className={`text-gray-600 ${isFullscreen ? 'text-base' : 'text-xs'}`}>
                 {communities.size > 0 && `${new Set(communities.values()).size} communities detected`}
               </div>
             )}
@@ -620,32 +780,62 @@ export default function EnhancedNetworkGraph({
 
       {/* Dynamic Explanation */}
       <div className="bg-blue-50 p-4 rounded-lg">
-        <h4 className="font-semibold text-sm mb-2">Why These Clusters?</h4>
-        <p className="text-sm text-gray-700">{clusterExplanation}</p>
-        <div className="mt-2 text-xs text-gray-600">
-          <strong>Key Insight:</strong> Users connect when they exceed the minimum score threshold across multiple dimensions
-          (interests, age, location). Some users may share interests but still appear disconnected because their overall
-          compatibility score (combining all factors) falls below the threshold. For example, two "tech" enthusiasts might
-          not connect if they have very different ages or locations.
+        <h4 className={`font-semibold mb-2 ${isFullscreen ? 'text-lg' : 'text-sm'}`}>Why These Clusters?</h4>
+        <p className={`text-gray-700 ${isFullscreen ? 'text-base' : 'text-sm'}`}>{clusterExplanation}</p>
+        <div className={`mt-2 text-gray-600 ${isFullscreen ? 'text-base' : 'text-xs'}`}>
+          <strong>Key Insight:</strong> Communities form based on multiple shared dimensions:
+          <ul className="list-disc list-inside mt-1 space-y-1">
+            <li><strong>Interest Alignment:</strong> People with similar hobbies and passions (e.g., all gamers, all fitness enthusiasts)</li>
+            <li><strong>Geographic Proximity:</strong> Within ~5km for regular meetups (using intelligent zip code clustering)</li>
+            <li><strong>Life Stage:</strong> Similar age ranges often indicate compatible life situations</li>
+            <li><strong>Cultural Affinity:</strong> Shared values and lifestyle choices create natural bonds</li>
+          </ul>
+          <div className="mt-2 p-2 bg-yellow-50 rounded">
+            <strong>Note:</strong> Real communities emerge from behavioral clusters - nerds hang with nerds, athletes with athletes,
+            parents with parents. Our algorithm detects these natural social patterns.
+          </div>
         </div>
       </div>
 
       {/* Layout-specific insights */}
       {layoutMode === 'community' && (
         <div className="bg-green-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-sm mb-2">Community Detection Insights</h4>
-          <p className="text-sm text-gray-700 mb-3">
+          <h4 className={`font-semibold mb-2 ${isFullscreen ? 'text-lg' : 'text-sm'}`}>Community Detection Insights</h4>
+          <p className={`text-gray-700 mb-3 ${isFullscreen ? 'text-base' : 'text-sm'}`}>
             Communities represent groups where everyone is transitively connected through the network. These are natural
             "friend groups" that could benefit from group events.
           </p>
           {communityDetails.size > 0 && (
-            <div className="space-y-2">
-              <div className="font-semibold text-xs">Community Characteristics:</div>
-              {Array.from(communityDetails.entries()).map(([id, description]) => (
-                <div key={id} className="text-xs bg-white p-2 rounded border-l-4 border-green-500">
-                  <span className="font-semibold">Community {id + 1}:</span> {description}
-                </div>
-              ))}
+            <div className="space-y-3">
+              <div className={`font-semibold mb-2 ${isFullscreen ? 'text-base' : 'text-xs'}`}>Community Characteristics:</div>
+              {Array.from(communityDetails.entries()).map(([id, description]) => {
+                const isYourCommunity = description.includes('YOUR COMMUNITY')
+                return (
+                  <div
+                    key={id}
+                    className={`p-3 rounded border-l-4 ${isFullscreen ? 'text-base' : 'text-xs'} ${
+                      isYourCommunity
+                        ? 'bg-yellow-50 border-yellow-500 shadow-md'
+                        : 'bg-white border-green-500'
+                    }`}
+                  >
+                    <div className="font-semibold mb-1">
+                      Community {id + 1} {isYourCommunity && '⭐'}
+                    </div>
+                    <div className="text-gray-700">{description}</div>
+                  </div>
+                )
+              })}
+
+              <div className={`bg-blue-50 p-3 rounded ${isFullscreen ? 'text-base' : 'text-xs'}`}>
+                <div className="font-semibold mb-1">How Categories Are Determined:</div>
+                <ul className="list-disc list-inside space-y-1 text-gray-700">
+                  <li><strong>Interest Focus:</strong> Keywords in interests are grouped into categories (Tech/Gaming, Fitness, Arts, etc.)</li>
+                  <li><strong>Shared Interests:</strong> Percentage shows how many members share specific interests</li>
+                  <li><strong>Geographic Clustering:</strong> Zip codes within ~5km are grouped together (e.g., "941xx area")</li>
+                  <li><strong>Age Ranges:</strong> Shows the spread and average age within the community</li>
+                </ul>
+              </div>
             </div>
           )}
         </div>
@@ -653,8 +843,8 @@ export default function EnhancedNetworkGraph({
 
       {layoutMode === 'geographic' && (
         <div className="bg-yellow-50 p-4 rounded-lg">
-          <h4 className="font-semibold text-sm mb-2">Geographic Distribution</h4>
-          <p className="text-sm text-gray-700">
+          <h4 className={`font-semibold mb-2 ${isFullscreen ? 'text-lg' : 'text-sm'}`}>Geographic Distribution</h4>
+          <p className={`text-gray-700 ${isFullscreen ? 'text-base' : 'text-sm'}`}>
             Users are grouped by zip code. Lines between groups show cross-neighborhood connections.
             This view helps identify location-based meetup opportunities and shows how geography affects social connections.
           </p>

@@ -38,7 +38,8 @@
       "Bash(timeout 400s npm run build)",
       "Bash(git add:*)",
       "Read(//c/Users/Allan/Downloads/**)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

@@ -5,11 +5,11 @@ export async function GET() {
   try {
     const supabase = await createClient()
 
-    // Fetch all demo users
+    // Fetch all demo users plus Allan as just another node
     const { data: users, error } = await supabase
       .from('profiles')
       .select('user_id, display_name, full_name, bio, age, location, interests, photo_url')
-      .like('display_name', 'Demo:%')
+      .or('display_name.like.Demo:%,display_name.eq.Allan')
       .order('display_name')
 
     if (error) {

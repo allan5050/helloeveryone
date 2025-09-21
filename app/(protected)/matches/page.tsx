@@ -578,7 +578,7 @@ export default function MatchesPage() {
                     matchScore={matchScore}
                     sharedInterests={match.common_interests || []}
                     className={viewMode === 'list' ? 'w-full' : ''}
-                    showAIButton={matchQuality === 'high' || matchQuality === 'medium'}
+                    showAIButton={true}
                     currentUserBio={currentUserData.bio}
                     currentUserInterests={currentUserData.interests}
                   />
