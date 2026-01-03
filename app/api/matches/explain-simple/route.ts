@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
+import { checkRateLimit } from '@/lib/api/rate-limit'
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY
 const ANTHROPIC_MODEL = process.env.ANTHROPIC_LLM_MODEL || 'claude-sonnet-4-20250514'
@@ -13,6 +14,10 @@ interface ProfileData {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 10 requests per minute for expensive AI operations
+  const rateLimitResponse = checkRateLimit(request, 'expensive')
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { matchIds, currentUser, targetUser, sharedInterests, matchQuality, forceRefresh } = await request.json()
 

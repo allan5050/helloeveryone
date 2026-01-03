@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/api/auth'
+import { checkRateLimit } from '@/lib/api/rate-limit'
 
 interface MatchCalculationRequest {
   targetProfileId?: string
@@ -31,6 +32,10 @@ interface MatchScore {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 60 requests per minute for matching operations
+  const rateLimitResponse = checkRateLimit(request, 'matching')
+  if (rateLimitResponse) return rateLimitResponse
+
   const startTime = Date.now()
 
   try {

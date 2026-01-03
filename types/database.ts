@@ -14,13 +14,24 @@ export type Database = {
           id: string
           user_id: string
           display_name: string
+          full_name: string | null
+          first_name: string | null
+          last_name: string | null
           bio: string | null
           age: number | null
           location: string | null
           interests: string[] | null
           embedding: string | null // vector type stored as string
+          bio_embedding: string | null // vector type for bio semantic search
           role: 'user' | 'admin'
           is_active: boolean
+          is_profile_complete: boolean
+          photo_url: string | null
+          preferred_age_min: number | null
+          preferred_age_max: number | null
+          looking_for: string[] | null
+          availability: string[] | null
+          privacy_settings: Json | null
           created_at: string
           updated_at: string
         }
@@ -28,13 +39,24 @@ export type Database = {
           id?: string
           user_id: string
           display_name: string
+          full_name?: string | null
+          first_name?: string | null
+          last_name?: string | null
           bio?: string | null
           age?: number | null
           location?: string | null
           interests?: string[] | null
           embedding?: string | null
+          bio_embedding?: string | null
           role?: 'user' | 'admin'
           is_active?: boolean
+          is_profile_complete?: boolean
+          photo_url?: string | null
+          preferred_age_min?: number | null
+          preferred_age_max?: number | null
+          looking_for?: string[] | null
+          availability?: string[] | null
+          privacy_settings?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -42,13 +64,24 @@ export type Database = {
           id?: string
           user_id?: string
           display_name?: string
+          full_name?: string | null
+          first_name?: string | null
+          last_name?: string | null
           bio?: string | null
           age?: number | null
           location?: string | null
           interests?: string[] | null
           embedding?: string | null
+          bio_embedding?: string | null
           role?: 'user' | 'admin'
           is_active?: boolean
+          is_profile_complete?: boolean
+          photo_url?: string | null
+          preferred_age_min?: number | null
+          preferred_age_max?: number | null
+          looking_for?: string[] | null
+          availability?: string[] | null
+          privacy_settings?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -394,6 +427,57 @@ export type Database = {
           },
         ]
       }
+      ai_insights: {
+        Row: {
+          id: string
+          user_id: string
+          target_user_id: string
+          compatibility_reason: string
+          conversation_starters: Json
+          meeting_suggestions: Json
+          shared_interests: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          target_user_id: string
+          compatibility_reason: string
+          conversation_starters?: Json
+          meeting_suggestions?: Json
+          shared_interests?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          target_user_id?: string
+          compatibility_reason?: string
+          conversation_starters?: Json
+          meeting_suggestions?: Json
+          shared_interests?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'ai_insights_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['user_id']
+          },
+          {
+            foreignKeyName: 'ai_insights_target_user_id_fkey'
+            columns: ['target_user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['user_id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -450,3 +534,4 @@ export type Message = Tables<'messages'>
 export type Favorite = Tables<'favorites'>
 export type Block = Tables<'blocks'>
 export type MeetingSlot = Tables<'meeting_slots'>
+export type AIInsight = Tables<'ai_insights'>

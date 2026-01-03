@@ -140,6 +140,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for secret scanning
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -150,8 +152,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run security audit
+      - name: Run npm security audit
         run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Scan for secrets in code
+        run: npm run security:secrets
+        continue-on-error: false  # FAIL if secrets detected
+
+      - name: Run comprehensive security scan
+        run: npm run security:scan:ci
+        continue-on-error: false  # FAIL if critical security issues
+
+      - name: Run security unit tests
+        run: npm run test:security
+        continue-on-error: false  # FAIL if security tests fail
+
+      - name: Run edge case security tests
+        run: npm run test:security:edge
+        continue-on-error: false
+
+      - name: Run business logic security tests
+        run: npm run test:security:business
+        continue-on-error: false
 
   deploy-preview:
     name: Deploy Preview

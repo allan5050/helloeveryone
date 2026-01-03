@@ -5,6 +5,12 @@
 
 🌐 **Live at**: [https://helloeveryone.vercel.app](https://helloeveryone.vercel.app)
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Contributors](https://img.shields.io/github/contributors/allan5050/helloeveryone)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+![Next.js](https://img.shields.io/badge/Next.js-15-black)
+
 ## 🎯 Problem We Solve
 
 Adults waste precious time at social events talking to random people with whom they have nothing in
@@ -158,16 +164,87 @@ These tools enable LLMs and developers to autonomously explore the database with
 
 ## 🤝 Contributing
 
-This is currently a private project. See [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) for
-development guidelines.
+We welcome contributions from developers of all skill levels! Here's how to get started:
+
+### Quick Start for Contributors
+
+1. **Fork and Clone**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/helloeveryone.git
+   cd helloeveryone
+   npm install
+   ```
+
+2. **Set up Environment** (see [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed setup)
+   - Option A: Get free API keys (Supabase, OpenAI)
+   - Option B: Use demo mode (no API keys required)
+
+3. **Make Your Changes**
+   ```bash
+   git checkout -b feature/your-feature-name
+   # Make changes
+   npm run lint
+   npm run type-check
+   git commit -m "feat: your feature description"
+   git push origin feature/your-feature-name
+   ```
+
+4. **Open a Pull Request** and describe your changes
+
+### What We're Looking For
+
+- 🐛 **Bug Fixes** - Fix broken functionality
+- ✨ **New Features** - Implement features from issues
+- 🎨 **UI/UX** - Better design, accessibility, mobile experience
+- 📚 **Documentation** - Improve guides, add examples
+- 🧪 **Tests** - Increase test coverage
+- ⚡ **Performance** - Optimize database queries, reduce bundle size
+
+**See [CONTRIBUTING.md](./CONTRIBUTING.md) for full guidelines.**
+
+### Good First Issues
+
+Looking for a place to start? Check out issues labeled [`good first issue`](https://github.com/allan5050/helloeveryone/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)!
+
+### Development Guidelines
+
+- TypeScript required for all code
+- Follow existing code patterns
+- Add tests for new features (when possible)
+- Keep PRs focused and small
+- See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for current priorities
 
 ## 📄 License
 
-Proprietary - All rights reserved
+This project is licensed under the [MIT License](./LICENSE) - see the LICENSE file for details.
 
-## 🚦 Status
+You're free to use, modify, and distribute this software as long as you include the original copyright and license notice.
 
-🟡 **Beta Development** - Target launch: 6 weeks
+## 🚦 Project Status
+
+**Current State**: ~80% Complete - Preparing for Open Source Release
+
+- ✅ Core matching algorithm working
+- ✅ Authentication and user profiles
+- ✅ Events and RSVP system
+- ✅ Chat functionality
+- ⚠️  68 TypeScript errors to fix
+- ⚠️  Test suite improvements needed (currently 33% passing)
+
+See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for detailed status and roadmap.
+
+## 🌟 Contributors
+
+Thanks to everyone who contributes to making HelloEveryone.fun better!
+
+<!-- Contributors list will be automatically updated by GitHub -->
+<a href="https://github.com/allan5050/helloeveryone/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=allan5050/helloeveryone" />
+</a>
+
+## 🔐 Security
+
+Found a security vulnerability? Please report it privately to allan.nevala@gmail.com. See [SECURITY.md](./SECURITY.md) for details.
 
 ---
 

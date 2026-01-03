@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/api/auth'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/api/rate-limit'
 
 interface UserDataExport {
   profile: any
@@ -19,9 +20,16 @@ interface UserDataExport {
 }
 
 export async function GET(request: NextRequest) {
+  // Rate limit: 10 requests per minute for expensive operations
+  const rateLimitResponse = checkRateLimit(request, 'expensive')
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const currentUser = await requireAuth()
     const userId = currentUser.id
+
+    // Create server-side Supabase client
+    const supabase = await createClient()
 
     // Collect all user data
     const userDataExport: UserDataExport = {

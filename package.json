@@ -1,7 +1,8 @@
 {
   "name": "helloeveryone",
   "version": "0.1.0",
-  "private": true,
+  "license": "MIT",
+  "private": false,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -26,7 +27,15 @@
     "docker:logs": "docker-compose logs -f",
     "docker:reset": "docker-compose down -v && docker-compose up -d",
     "security:audit": "npm audit --audit-level=high",
-    "security:fix": "npm audit fix"
+    "security:fix": "npm audit fix",
+    "security:scan": "node scripts/security-scan.js",
+    "security:scan:quick": "node scripts/security-scan.js --quick",
+    "security:scan:ci": "node scripts/security-scan.js --ci",
+    "security:secrets": "node scripts/check-secrets.js",
+    "test:security": "jest --testPathPattern=tests/security --passWithNoTests",
+    "test:security:edge": "jest --testPathPattern=tests/security/edge-cases --passWithNoTests",
+    "test:security:business": "jest --testPathPattern=tests/security/business-logic --passWithNoTests",
+    "test:security:all": "npm run test:security && npm run security:scan"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.62.0",

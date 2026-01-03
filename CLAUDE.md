@@ -27,10 +27,15 @@ npm run start        # Start production server
 ```bash
 npm run test         # Run Jest unit tests
 npm run test:watch   # Run tests in watch mode
+npm run test:coverage # Generate coverage report
 npm run test:e2e     # Run Playwright end-to-end tests
 npm run test:integration  # Run integration tests
+npm run test:security # Run security tests
 npm run lint         # Run Next.js linter
+npm run lint:fix     # Auto-fix linting errors
 npm run type-check   # Run TypeScript type checking (tsc --noEmit)
+npm run format       # Format code with Prettier
+npm run format:check # Check formatting without changes
 ```
 
 ### Database
@@ -38,6 +43,15 @@ npm run type-check   # Run TypeScript type checking (tsc --noEmit)
 ```bash
 npm run db:setup     # Initialize database tables and enable pgvector
 npm run db:seed      # Populate database with sample data
+npm run export-demo  # Export demo data for testing
+```
+
+### Security
+
+```bash
+npm run security:audit # Check for vulnerabilities (npm audit)
+npm run security:fix   # Auto-fix vulnerabilities
+npm run security:scan  # Run secret detection scan
 ```
 
 ## Architecture Overview
@@ -151,11 +165,12 @@ The `.claude/agents/` directory contains specialized agent configurations:
 
 ## Important Notes
 
-- Never commit secrets or API keys - use environment variables
-- All database changes require proper migrations
-- Follow mutual visibility rules for all matching features
-- Prioritize mobile experience (PWA-first approach)
-- Use ICS files for calendar integration (no OAuth complexity)
+- **Never commit secrets or API keys** - use environment variables (`.env.local`, never `.env`)
+- **All database changes require proper migrations** - create migration files in `supabase/migrations/`
+- **Follow mutual visibility rules** for all matching features - users can only filter by fields they share
+- **Prioritize mobile experience** - PWA-first approach, test on mobile viewports
+- **Use ICS files for calendar integration** - no OAuth complexity, universal compatibility
+- **Current Status**: ~80% complete with 68 TypeScript errors and test suite improvements needed (see `docs/working_docs/PROJECT_STATUS.md`)
 
 ## Authentication Implementation
 
@@ -199,47 +214,98 @@ Use these tools to autonomously query and understand the database without manual
 
 ## Documentation
 
-The `docs/` folder contains comprehensive project documentation:
+The `docs/` folder contains comprehensive project documentation organized by category:
 
-**Architecture & Planning:**
-- `ARCHITECTURE.md` - System architecture and design patterns
-- `DATABASE_SCHEMA.md` - Complete database schema documentation
-- `database-schema.md` - Updated schema with pgvector support
-- `IMPLEMENTATION_PLAN.md` - Development roadmap
+```
+docs/
+├── INDEX.md                    # Start here - documentation navigation
+├── architecture/               # System design docs
+│   ├── ARCHITECTURE.md        # System architecture and design patterns
+│   └── API_ROUTES.md          # API endpoint documentation
+├── database/                   # Database documentation
+│   ├── DATABASE_SCHEMA.md     # Tables, relationships, RLS policies
+│   ├── DATABASE_SETUP.md      # Database initialization guide
+│   └── rls-policies.md        # Row Level Security documentation
+├── development/                # Development guides
+│   ├── AUTHENTICATION.md      # Auth flow and session management
+│   ├── COMPONENTS.md          # React component hierarchy
+│   ├── HOOKS.md               # Custom React hooks documentation
+│   ├── TESTING.md             # Testing strategy and guidelines
+│   ├── PWA.md                 # Progressive Web App implementation
+│   ├── DEPLOYMENT.md          # Deployment process and configuration
+│   ├── CI_CD_SUMMARY.md       # CI/CD pipeline documentation
+│   ├── CYBERSECURITY_SETUP.md # Security configuration
+│   └── MCP_DATABASE_TOOLS.md  # MCP tools for database access
+├── features/                   # Feature-specific documentation
+│   ├── MATCHING_SYSTEM.md     # AI-powered matching algorithm
+│   └── RSVP_SYSTEM.md         # Event RSVP functionality
+└── working_docs/              # Internal working documents (gitignored)
+    ├── PROJECT_STATUS.md      # Current project status
+    ├── planning/              # Implementation plans and roadmaps
+    ├── issues/                # Known issues and fix documentation
+    ├── checklists/            # Testing and deployment checklists
+    ├── demo/                  # Demo scripts and narratives
+    └── setup/                 # Setup troubleshooting guides
+```
 
-**Features & Systems:**
-- `MATCHING_SYSTEM.md` - AI-powered matching algorithm details
-- `RSVP_SYSTEM.md` - Event RSVP functionality
-- `AUTHENTICATION.md` - Auth flow and session management
-- `PWA.md` - Progressive Web App implementation
+### Documentation Maintenance
 
-**Development:**
-- `API_ROUTES.md` - API endpoint documentation
-- `COMPONENTS.md` - React component hierarchy
-- `HOOKS.md` - Custom React hooks documentation
-- `TESTING.md` - Testing strategy and guidelines
-- `DEPLOYMENT.md` - Deployment process and configuration
+**Before committing changes**, update relevant documentation in `docs/` if you've:
+- Added or modified API endpoints → update `docs/architecture/API_ROUTES.md`
+- Changed database schema → update `docs/database/DATABASE_SCHEMA.md`
+- Added new components or hooks → update `docs/development/COMPONENTS.md` or `HOOKS.md`
+- Modified authentication flow → update `docs/development/AUTHENTICATION.md`
+- Changed matching algorithm → update `docs/features/MATCHING_SYSTEM.md`
+- Added new features → consider adding to relevant docs or creating new ones
 
-**Database:**
-- `DATABASE_SETUP.md` - Database initialization guide
-- `DATABASE_FIXES_SUMMARY.md` - Migration history
-- `rls-policies.md` - Row Level Security documentation
-
-**Reference:**
-- `INDEX.md` - Documentation index and navigation
-- `KNOWN_ISSUES.md` - Current issues and workarounds
-- `TESTING_CHECKLIST.md` - Pre-deployment testing checklist
-- `DEPLOYMENT_CHECKLIST.md` - Deployment verification steps
+This keeps documentation in sync with code and helps future contributors understand the system.
 
 ## Environment Variables
 
 Required in `.env.local` and Vercel:
 
-```
+```bash
+# Supabase (Required)
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # For admin operations
 DB_PASSWORD=your-database-password  # Required for MCP tools
-SUPABASE_SERVICE_ROLE_API_KEY=your-service-role-key  # For admin operations
+
+# AI APIs (Required for matching)
+OPENAI_API_KEY=sk-your-key  # For semantic embeddings
+ANTHROPIC_API_KEY=sk-ant-your-key  # For AI match explanations (optional)
+
+# Demo Mode (Optional - for development without API keys)
+NEXT_PUBLIC_ENABLE_DEMO_MODE=true  # Use mock data instead of real database
 ```
 
-See `env.example` for complete environment variable documentation.
+**See `env.example` for complete environment variable documentation.**
+
+**Note**: `.env` files are gitignored. Never commit API keys to the repository.
+
+## Known Issues & Current Limitations
+
+Before making changes, be aware of these current issues (see `docs/working_docs/PROJECT_STATUS.md` for details):
+
+### TypeScript Errors (68 errors)
+- **Photo/Avatar URL mismatches**: Code references `photo_url` vs `avatar_url` inconsistently
+- **Event type missing properties**: `date`, `event_type`, `capacity`, `host` not in type definition
+- **Profile schema gaps**: `is_profile_complete`, `privacy_settings` missing from TypeScript types
+- **Impact**: Production builds succeed but type safety is compromised
+
+### Test Suite (42/126 passing - 33%)
+- Test framework configuration mixing vitest and Jest
+- Database schema changes not reflected in test fixtures
+- Mock structure mismatches with actual implementation
+- **Note**: Don't worry if tests fail - we're actively fixing this
+
+### Database Schema
+- Recent migrations added columns that TypeScript types haven't caught up with
+- Run migrations before testing: `npm run db:setup`
+- Check current schema with: `node mcp/inspect-db.js`
+
+When in doubt, consult `docs/working_docs/PROJECT_STATUS.md` for the latest information on blockers and workarounds.
+
+## Github Guidelines
+Do not mention Claude or co-authors in commit messages or pushes to github.
+Do not include hardcoded API keys, secrets, or sensitive information in code or code comments.

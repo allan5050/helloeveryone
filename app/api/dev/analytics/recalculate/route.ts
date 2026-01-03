@@ -1,6 +1,17 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+// SECURITY: Only allow in development environment
+function checkDevelopmentOnly() {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'This endpoint is disabled in production' },
+      { status: 403 }
+    )
+  }
+  return null
+}
+
 interface User {
   user_id: string
   display_name: string
@@ -180,6 +191,9 @@ function calculateAdvancedMatchScore(user1: User, user2: User) {
 }
 
 export async function POST() {
+  const devCheck = checkDevelopmentOnly()
+  if (devCheck) return devCheck
+
   try {
     const supabase = await createClient()
 

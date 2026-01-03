@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+// SECURITY: Only allow in development environment
+function checkDevelopmentOnly() {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'This endpoint is disabled in production' },
+      { status: 403 }
+    )
+  }
+  return null
+}
+
 interface User {
   user_id: string
   display_name: string
@@ -292,6 +303,9 @@ function calculateLocationMatch(loc1: string, loc2: string): number {
 }
 
 export async function POST(request: NextRequest) {
+  const devCheck = checkDevelopmentOnly()
+  if (devCheck) return devCheck
+
   try {
     const supabase = await createClient()
     const body = await request.json().catch(() => ({}))

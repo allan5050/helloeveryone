@@ -2,9 +2,17 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
+  // SECURITY: Only allow in development environment
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'This endpoint is disabled in production' },
+      { status: 403 }
+    )
+  }
+
   try {
     const { userId } = await request.json()
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 })
     }

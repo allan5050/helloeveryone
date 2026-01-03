@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/api/auth'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,11 +21,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create bidirectional block relationship
-    const { error } = await supabase.from('blocks').insert([
-      { blocker_id: currentUser.id, blocked_id: blockedUserId },
-      { blocker_id: blockedUserId, blocked_id: currentUser.id },
-    ])
+    const supabase = await createClient()
+
+    // Create unidirectional block (only the blocker's intent is recorded)
+    // Note: Bidirectional was removed as it creates blocks the other user didn't consent to
+    const { error } = await supabase.from('blocks').insert({
+      blocker_id: currentUser.id,
+      blocked_id: blockedUserId,
+    })
 
     if (error) {
       console.error('Error creating block:', error)
@@ -78,13 +81,14 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Remove bidirectional block relationship
+    const supabase = await createClient()
+
+    // Only remove blocks created by the current user (not blocks by others)
     const { error } = await supabase
       .from('blocks')
       .delete()
-      .or(
-        `and(blocker_id.eq.${currentUser.id},blocked_id.eq.${blockedUserId}),and(blocker_id.eq.${blockedUserId},blocked_id.eq.${currentUser.id})`
-      )
+      .eq('blocker_id', currentUser.id)
+      .eq('blocked_id', blockedUserId)
 
     if (error) {
       console.error('Error removing block:', error)
@@ -107,6 +111,7 @@ export async function DELETE(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const currentUser = await requireAuth()
+    const supabase = await createClient()
 
     const { data: blockedUsers, error } = await supabase
       .from('blocks')

@@ -186,4 +186,38 @@ export function getRateLimitKey(
   return `${prefix}:${ip}:${url.pathname}`
 }
 
+/**
+ * Check rate limit and return 429 response if exceeded
+ * Returns null if allowed, Response if rate limited
+ */
+export function checkRateLimit(
+  request: Request,
+  configKey: keyof typeof rateLimitConfigs = 'general'
+): Response | null {
+  const key = getRateLimitKey(request, configKey)
+  const result = rateLimit(key, configKey)
+
+  if (!result.isAllowed) {
+    const retryAfter = Math.ceil((result.resetTime - Date.now()) / 1000)
+    return new Response(
+      JSON.stringify({
+        error: 'RATE_LIMIT_EXCEEDED',
+        message: 'Too many requests. Please try again later.',
+        retryAfter,
+      }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfter),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(result.resetTime),
+        },
+      }
+    )
+  }
+
+  return null
+}
+
 export { rateLimiter }

@@ -46,7 +46,15 @@
       "Bash(cat:*)",
       "Bash(wc:*)",
       "Bash(head:*)",
-      "Bash(timeout 60 npm run build)"
+      "Bash(timeout 60 npm run build)",
+      "Bash(npm audit:*)",
+      "Bash(npm run test:security:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(timeout 400 npm run build)",
+      "Bash(npm run security:scan:*)",
+      "Bash(echo:*)",
+      "Bash(npm run security:scan:quick:*)"
     ],
     "deny": [],
     "ask": []

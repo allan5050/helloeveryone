@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/api/auth'
 import { createClient } from '@/lib/supabase/server'
+import { checkRateLimit } from '@/lib/api/rate-limit'
 import { z } from 'zod'
 
 const sendMessageSchema = z.object({
@@ -12,6 +13,10 @@ const sendMessageSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 100 requests per minute for chat
+  const rateLimitResponse = checkRateLimit(request, 'general')
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     // Authenticate user
     const user = await requireAuth()
@@ -42,8 +47,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Receiver not found' }, { status: 404 })
     }
 
-    // TODO: Add blocked users check when blocking system is implemented
-    // For now, we'll assume no blocking
+    // Check if either user has blocked the other
+    const { data: blockExists } = await supabase
+      .from('blocks')
+      .select('id')
+      .or(
+        `and(blocker_id.eq.${user.id},blocked_id.eq.${receiver_id}),and(blocker_id.eq.${receiver_id},blocked_id.eq.${user.id})`
+      )
+      .limit(1)
+      .maybeSingle()
+
+    if (blockExists) {
+      return NextResponse.json(
+        { error: 'Cannot send message to this user' },
+        { status: 403 }
+      )
+    }
 
     // Create the message
     const { data: message, error: messageError } = await supabase

@@ -1,92 +1,129 @@
 # HelloEveryone Documentation Index
 
-## 🚀 Quick Start
+## Quick Start
 
 For immediate development setup, see:
 1. **[CLAUDE.md](../CLAUDE.md)** - Main project overview and development commands
-2. **[DATABASE_SETUP.md](DATABASE_SETUP.md)** - Database initialization
+2. **[DATABASE_SETUP.md](database/DATABASE_SETUP.md)** - Database initialization
 3. **[.env.example](../.env.example)** - Environment configuration
 
-## 📚 Documentation Structure
+## Documentation Structure
+
+```
+docs/
+├── INDEX.md                    # This file - documentation navigation
+├── architecture/               # System design & API docs
+│   ├── ARCHITECTURE.md        # System architecture overview
+│   └── API_ROUTES.md          # API endpoint documentation
+├── database/                   # Database documentation
+│   ├── DATABASE_SCHEMA.md     # Tables, relationships, policies
+│   ├── DATABASE_SETUP.md      # Setup and initialization
+│   └── rls-policies.md        # Row Level Security docs
+├── development/                # Development guides
+│   ├── AUTHENTICATION.md      # Auth system documentation
+│   ├── COMPONENTS.md          # React component patterns
+│   ├── HOOKS.md               # Custom React hooks
+│   ├── TESTING.md             # Testing strategy
+│   ├── PWA.md                 # Progressive Web App
+│   ├── DEPLOYMENT.md          # Deployment guide
+│   ├── CI_CD_SUMMARY.md       # CI/CD pipeline docs
+│   ├── CYBERSECURITY_SETUP.md # Security configuration
+│   ├── MCP_DATABASE_TOOLS.md  # MCP tools documentation
+│   └── DESIGN_MARKETING_GUIDE.md # Design guidelines
+├── features/                   # Feature-specific documentation
+│   ├── MATCHING_SYSTEM.md     # Matching algorithm details
+│   └── RSVP_SYSTEM.md         # Event RSVP system
+└── working_docs/              # Working documents (gitignored)
+    ├── PROJECT_STATUS.md      # Current project status
+    ├── planning/              # Implementation plans
+    ├── issues/                # Known issues & fixes
+    ├── checklists/            # Testing & deployment checklists
+    ├── demo/                  # Demo scripts & narratives
+    └── setup/                 # Setup troubleshooting
+```
+
+## Core Documentation
 
 ### Architecture & Design
 
-| Document | Purpose | Key For |
-|----------|---------|---------|
-| **[ARCHITECTURE.md](ARCHITECTURE.md)** | System architecture overview, tech stack, directory structure | Understanding overall system design |
-| **[API_ROUTES.md](API_ROUTES.md)** | Complete API documentation with examples | API development and integration |
-| **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** | Database tables, relationships, RLS policies | Database operations and queries |
-| **[MATCHING_SYSTEM.md](MATCHING_SYSTEM.md)** | Matching algorithms and scoring logic | Understanding core business logic |
+| Document | Purpose |
+|----------|---------|
+| **[ARCHITECTURE.md](architecture/ARCHITECTURE.md)** | System architecture, tech stack, directory structure |
+| **[API_ROUTES.md](architecture/API_ROUTES.md)** | Complete API documentation with examples |
+
+### Database
+
+| Document | Purpose |
+|----------|---------|
+| **[DATABASE_SCHEMA.md](database/DATABASE_SCHEMA.md)** | Tables, relationships, RLS policies |
+| **[DATABASE_SETUP.md](database/DATABASE_SETUP.md)** | Database initialization and configuration |
+| **[rls-policies.md](database/rls-policies.md)** | Row Level Security documentation |
 
 ### Development Guides
 
-| Document | Purpose | Key For |
-|----------|---------|---------|
-| **[AUTHENTICATION.md](AUTHENTICATION.md)** | Auth system, server/client auth, OAuth setup | Authentication implementation |
-| **[COMPONENTS.md](COMPONENTS.md)** | Component structure, guidelines, patterns | Frontend development |
-| **[HOOKS.md](HOOKS.md)** | Custom React hooks documentation | Reusable logic and state management |
-| **[PWA.md](PWA.md)** | Progressive Web App features and config | Mobile and offline functionality |
+| Document | Purpose |
+|----------|---------|
+| **[AUTHENTICATION.md](development/AUTHENTICATION.md)** | Auth system, server/client auth, OAuth |
+| **[COMPONENTS.md](development/COMPONENTS.md)** | Component structure, guidelines, patterns |
+| **[HOOKS.md](development/HOOKS.md)** | Custom React hooks documentation |
+| **[TESTING.md](development/TESTING.md)** | Testing strategy and examples |
+| **[PWA.md](development/PWA.md)** | Progressive Web App features |
+| **[DEPLOYMENT.md](development/DEPLOYMENT.md)** | Deployment configuration |
+| **[CI_CD_SUMMARY.md](development/CI_CD_SUMMARY.md)** | CI/CD pipeline documentation |
+| **[CYBERSECURITY_SETUP.md](development/CYBERSECURITY_SETUP.md)** | Security setup guide |
+| **[MCP_DATABASE_TOOLS.md](development/MCP_DATABASE_TOOLS.md)** | MCP tools for database access |
 
-### Implementation Details
+### Features
 
-| Document | Purpose | Key For |
-|----------|---------|---------|
-| **[RSVP_SYSTEM.md](RSVP_SYSTEM.md)** | Event RSVP functionality and capacity management | Event feature development |
-| **[TESTING.md](TESTING.md)** | Testing strategy, examples, CI/CD setup | Quality assurance and testing |
-| **[DATABASE_SETUP.md](DATABASE_SETUP.md)** | Database initialization and configuration | Environment setup |
+| Document | Purpose |
+|----------|---------|
+| **[MATCHING_SYSTEM.md](features/MATCHING_SYSTEM.md)** | Matching algorithms and scoring logic |
+| **[RSVP_SYSTEM.md](features/RSVP_SYSTEM.md)** | Event RSVP functionality |
 
-### Planning Documents
-
-| Document | Purpose | Key For |
-|----------|---------|---------|
-| **[helloeveryone-implementation-plan.md](helloeveryone-implementation-plan.md)** | Original implementation roadmap | Historical context and planning |
-| **[implementation-phases-doc.md](implementation-phases-doc.md)** | Phased implementation approach | Project management |
-
-## 🎯 Documentation by Use Case
+## Documentation by Use Case
 
 ### New Developer Onboarding
 
 1. **Start Here**: [CLAUDE.md](../CLAUDE.md)
-2. **Environment Setup**: [.env.example](../.env.example) → [DATABASE_SETUP.md](DATABASE_SETUP.md)
-3. **Architecture Understanding**: [ARCHITECTURE.md](ARCHITECTURE.md)
-4. **Development Flow**: [COMPONENTS.md](COMPONENTS.md) + [HOOKS.md](HOOKS.md)
+2. **Environment Setup**: [.env.example](../.env.example) → [DATABASE_SETUP.md](database/DATABASE_SETUP.md)
+3. **Architecture Understanding**: [ARCHITECTURE.md](architecture/ARCHITECTURE.md)
+4. **Development Flow**: [COMPONENTS.md](development/COMPONENTS.md) + [HOOKS.md](development/HOOKS.md)
 
 ### API Development
 
-1. **API Overview**: [API_ROUTES.md](API_ROUTES.md)
-2. **Authentication**: [AUTHENTICATION.md](AUTHENTICATION.md)
-3. **Database Schema**: [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)
-4. **Business Logic**: [MATCHING_SYSTEM.md](MATCHING_SYSTEM.md)
+1. **API Overview**: [API_ROUTES.md](architecture/API_ROUTES.md)
+2. **Authentication**: [AUTHENTICATION.md](development/AUTHENTICATION.md)
+3. **Database Schema**: [DATABASE_SCHEMA.md](database/DATABASE_SCHEMA.md)
+4. **Business Logic**: [MATCHING_SYSTEM.md](features/MATCHING_SYSTEM.md)
 
 ### Frontend Development
 
-1. **Component Structure**: [COMPONENTS.md](COMPONENTS.md)
-2. **State Management**: [HOOKS.md](HOOKS.md)
-3. **Authentication**: [AUTHENTICATION.md](AUTHENTICATION.md)
-4. **PWA Features**: [PWA.md](PWA.md)
+1. **Component Structure**: [COMPONENTS.md](development/COMPONENTS.md)
+2. **State Management**: [HOOKS.md](development/HOOKS.md)
+3. **Authentication**: [AUTHENTICATION.md](development/AUTHENTICATION.md)
+4. **PWA Features**: [PWA.md](development/PWA.md)
 
 ### Database Development
 
-1. **Schema Overview**: [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)
-2. **Setup Guide**: [DATABASE_SETUP.md](DATABASE_SETUP.md)
-3. **Matching Logic**: [MATCHING_SYSTEM.md](MATCHING_SYSTEM.md)
-4. **RSVP System**: [RSVP_SYSTEM.md](RSVP_SYSTEM.md)
+1. **Schema Overview**: [DATABASE_SCHEMA.md](database/DATABASE_SCHEMA.md)
+2. **Setup Guide**: [DATABASE_SETUP.md](database/DATABASE_SETUP.md)
+3. **RLS Policies**: [rls-policies.md](database/rls-policies.md)
+4. **Matching Logic**: [MATCHING_SYSTEM.md](features/MATCHING_SYSTEM.md)
 
 ### Testing & QA
 
-1. **Testing Strategy**: [TESTING.md](TESTING.md)
-2. **API Testing**: [API_ROUTES.md](API_ROUTES.md)
-3. **Component Testing**: [COMPONENTS.md](COMPONENTS.md)
-4. **PWA Testing**: [PWA.md](PWA.md)
+1. **Testing Strategy**: [TESTING.md](development/TESTING.md)
+2. **API Testing**: [API_ROUTES.md](architecture/API_ROUTES.md)
+3. **CI/CD Pipeline**: [CI_CD_SUMMARY.md](development/CI_CD_SUMMARY.md)
 
 ### DevOps & Deployment
 
-1. **Environment Config**: [.env.example](../.env.example)
-2. **Database Setup**: [DATABASE_SETUP.md](DATABASE_SETUP.md)
-3. **PWA Deployment**: [PWA.md](PWA.md)
-4. **Testing Pipeline**: [TESTING.md](TESTING.md)
+1. **Deployment Guide**: [DEPLOYMENT.md](development/DEPLOYMENT.md)
+2. **CI/CD Setup**: [CI_CD_SUMMARY.md](development/CI_CD_SUMMARY.md)
+3. **Security**: [CYBERSECURITY_SETUP.md](development/CYBERSECURITY_SETUP.md)
+4. **Database Setup**: [DATABASE_SETUP.md](database/DATABASE_SETUP.md)
 
-## 🔍 Quick Reference
+## Quick Reference
 
 ### Key Development Commands
 
@@ -105,34 +142,10 @@ npm run db:seed      # Populate sample data
 npm run test         # Unit tests
 npm run test:e2e     # End-to-end tests
 npm run test:coverage # Coverage report
+npm run test:security # Security tests
 ```
 
-### Important File Locations
-
-```
-📁 Core Configuration
-├── CLAUDE.md                 # Main project guide
-├── .env.example             # Environment variables
-├── package.json             # Dependencies and scripts
-└── next.config.js           # Next.js configuration
-
-📁 Source Code Structure
-├── app/                     # Next.js App Router
-│   ├── (public)/           # Public pages
-│   ├── (protected)/        # Authenticated pages
-│   └── api/                # API routes
-├── components/             # React components
-├── lib/                   # Business logic
-├── hooks/                 # Custom React hooks
-└── types/                 # TypeScript definitions
-
-📁 Database & Testing
-├── scripts/setup-db.js     # Database initialization
-├── tests/                  # Test files
-└── playwright.config.ts    # E2E test config
-```
-
-### Environment Variables Priority
+### Environment Variables
 
 **Required for Basic Functionality:**
 - `NEXT_PUBLIC_SUPABASE_URL`
@@ -147,114 +160,19 @@ npm run test:coverage # Coverage report
 - `GOOGLE_CLIENT_ID` (OAuth)
 - `NEXT_PUBLIC_SENTRY_DSN` (monitoring)
 
-## 🏗️ Architecture Overview
+## Working Documents
 
-### Tech Stack Summary
+The `working_docs/` folder contains internal working documents that are not part of the public documentation:
 
-- **Framework**: Next.js 15.5.2 with App Router
-- **Database**: Supabase (PostgreSQL + pgvector)
-- **Authentication**: Supabase Auth + Google OAuth
-- **Styling**: Tailwind CSS + shadcn/ui
-- **State Management**: Zustand + React Query
-- **Testing**: Jest + Playwright
-- **PWA**: next-pwa with service workers
-- **AI/ML**: OpenAI embeddings for semantic matching
+- **planning/** - Implementation plans and roadmaps
+- **issues/** - Known issues and fix documentation
+- **checklists/** - Testing and deployment checklists
+- **demo/** - Demo scripts and narratives
+- **setup/** - Setup troubleshooting guides
 
-### Data Flow
-
-```mermaid
-graph TD
-    A[User Browser] --> B[Next.js App]
-    B --> C[Server Components]
-    B --> D[API Routes]
-    C --> E[Supabase Client]
-    D --> E
-    E --> F[PostgreSQL + pgvector]
-    D --> G[OpenAI API]
-    F --> H[Matching Algorithms]
-```
-
-### Security Model
-
-- **Server-Side**: API routes, database queries, AI processing
-- **Client-Side**: UI components, form validation, state management
-- **Database**: Row Level Security (RLS) for privacy
-- **Authentication**: Server + client dual approach
-
-## 📋 Common Tasks
-
-### Adding New Features
-
-1. **Plan**: Check existing patterns in relevant docs
-2. **Database**: Update schema if needed ([DATABASE_SCHEMA.md](DATABASE_SCHEMA.md))
-3. **API**: Add routes following patterns in [API_ROUTES.md](API_ROUTES.md)
-4. **Frontend**: Create components per [COMPONENTS.md](COMPONENTS.md)
-5. **State**: Add hooks following [HOOKS.md](HOOKS.md)
-6. **Test**: Add tests per [TESTING.md](TESTING.md)
-
-### Debugging Issues
-
-1. **Database**: Check [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) for RLS policies
-2. **API**: Verify auth patterns in [API_ROUTES.md](API_ROUTES.md)
-3. **Auth**: Check [AUTHENTICATION.md](AUTHENTICATION.md) for session handling
-4. **Components**: Review [COMPONENTS.md](COMPONENTS.md) for patterns
-
-### Performance Optimization
-
-1. **PWA**: Follow [PWA.md](PWA.md) guidelines
-2. **Database**: Check indexes in [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)
-3. **Matching**: Review algorithms in [MATCHING_SYSTEM.md](MATCHING_SYSTEM.md)
-4. **Frontend**: Apply patterns from [COMPONENTS.md](COMPONENTS.md)
-
-## 🔄 Documentation Maintenance
-
-### Updating Documentation
-
-When making significant changes:
-
-1. **Code Changes** → Update relevant technical docs
-2. **API Changes** → Update [API_ROUTES.md](API_ROUTES.md)
-3. **Schema Changes** → Update [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)
-4. **New Components** → Update [COMPONENTS.md](COMPONENTS.md)
-5. **New Features** → Update [ARCHITECTURE.md](ARCHITECTURE.md)
-
-### Documentation Quality Guidelines
-
-- **Accuracy**: Keep docs synchronized with code
-- **Examples**: Include working code examples
-- **Context**: Explain the "why" not just the "what"
-- **Navigation**: Cross-reference related documents
-- **Maintenance**: Regular reviews and updates
-
-## 🤖 AI Assistant Context
-
-This documentation is optimized for AI assistants to quickly understand:
-
-- **Project structure** and **file locations**
-- **Development patterns** and **best practices**
-- **Database schema** and **API endpoints**
-- **Component architecture** and **state management**
-- **Testing strategies** and **deployment processes**
-
-Each document provides sufficient context for AI assistants to:
-- Generate appropriate code following project conventions
-- Suggest architectural improvements
-- Debug issues effectively
-- Maintain code quality standards
-
-## 📞 Support
-
-For questions about specific areas:
-
-- **Architecture Questions** → [ARCHITECTURE.md](ARCHITECTURE.md)
-- **Database Issues** → [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) + [DATABASE_SETUP.md](DATABASE_SETUP.md)
-- **API Problems** → [API_ROUTES.md](API_ROUTES.md) + [AUTHENTICATION.md](AUTHENTICATION.md)
-- **Frontend Issues** → [COMPONENTS.md](COMPONENTS.md) + [HOOKS.md](HOOKS.md)
-- **Testing Help** → [TESTING.md](TESTING.md)
-- **PWA Issues** → [PWA.md](PWA.md)
+These documents are for internal use and may be gitignored.
 
 ---
 
-**Last Updated**: September 2025  
-**Documentation Version**: 1.0  
-**Project Version**: 0.1.0
+**Last Updated**: January 2026
+**Documentation Version**: 2.0

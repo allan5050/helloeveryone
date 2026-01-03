@@ -4,7 +4,6 @@ Thank you for your interest in contributing to HelloEveryone.fun! This document 
 
 ## Table of Contents
 
-- [Code of Conduct](#code-of-conduct)
 - [Getting Started](#getting-started)
 - [Development Setup](#development-setup)
 - [How to Contribute](#how-to-contribute)
@@ -13,12 +12,6 @@ Thank you for your interest in contributing to HelloEveryone.fun! This document 
 - [Commit Message Guidelines](#commit-message-guidelines)
 - [Testing Requirements](#testing-requirements)
 - [Getting Help](#getting-help)
-
----
-
-## Code of Conduct
-
-This project adheres to a Code of Conduct that all contributors are expected to follow. Please read [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) before contributing.
 
 ---
 

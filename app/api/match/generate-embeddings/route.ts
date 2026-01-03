@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/lib/api/auth'
+import { checkRateLimit } from '@/lib/api/rate-limit'
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/embeddings'
 const EMBEDDING_MODEL = 'text-embedding-3-small'
@@ -55,6 +56,10 @@ async function generateEmbedding(text: string): Promise<number[]> {
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 10 requests per minute for expensive AI operations
+  const rateLimitResponse = checkRateLimit(request, 'expensive')
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { user } = await requireAuth()
     const supabase = createClient()
@@ -151,12 +156,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error in generate-embeddings API:', error)
 
-    if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
+    // Don't expose internal error details to client
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to generate embeddings' },
       { status: 500 }
     )
   }

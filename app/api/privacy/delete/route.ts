@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/api/auth'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { checkRateLimit } from '@/lib/api/rate-limit'
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 10 requests per minute for expensive operations
+  const rateLimitResponse = checkRateLimit(request, 'expensive')
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const currentUser = await requireAuth()
     const { confirmationText, reason } = await request.json()
@@ -27,6 +32,9 @@ export async function POST(request: NextRequest) {
       reason: reason || 'No reason provided',
       timestamp: new Date().toISOString(),
     })
+
+    // Create server-side Supabase client
+    const supabase = await createClient()
 
     // Start transaction-like deletion process
     // Note: Supabase doesn't support transactions in the traditional sense,
@@ -160,6 +168,9 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const currentUser = await requireAuth()
+
+    // Create server-side Supabase client
+    const supabase = await createClient()
 
     // Get user's data summary for deletion confirmation
     const [

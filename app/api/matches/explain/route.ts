@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { explainMatches, UserProfile } from '@/lib/llm/match-explainer'
+import { checkRateLimit } from '@/lib/api/rate-limit'
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 10 requests per minute for expensive LLM operations
+  const rateLimitResponse = checkRateLimit(request, 'expensive')
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const { matchIds } = await request.json()
 
