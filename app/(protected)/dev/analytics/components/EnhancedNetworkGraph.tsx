@@ -792,7 +792,7 @@ export default function EnhancedNetworkGraph({
             <li><strong>Cultural Affinity:</strong> Shared values and lifestyle choices create natural bonds</li>
           </ul>
           <div className="mt-2 p-2 bg-yellow-50 rounded">
-            <strong>Note:</strong> Real communities emerge from behavioral clusters - nerds hang with nerds, athletes with athletes,
+            <strong>Note:</strong> Real communities emerge from behavioral clusters - techies hang with techies, athletes with athletes,
             parents with parents. Our algorithm detects these natural social patterns.
           </div>
         </div>

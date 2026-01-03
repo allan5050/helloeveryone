@@ -42,7 +42,11 @@
       "Bash(curl:*)",
       "Bash(npm run export-demo:*)",
       "Bash(taskkill:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(head:*)",
+      "Bash(timeout 60 npm run build)"
     ],
     "deny": [],
     "ask": []
